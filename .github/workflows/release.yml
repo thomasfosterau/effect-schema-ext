@@ -43,10 +43,12 @@ jobs:
       # inside this job, which holds `id-token: write`. It triggers whenever
       # a manifest's mtime moves after the install step, e.g. when the
       # Changesets action checks out an existing `changeset-release/main`
-      # and `git reset --hard`s it back before `pnpm run version`, and
-      # scripts/release.sh's `pnpm exec changeset tag` is a second entry
-      # point. Scoped to this job: CI and local runs keep the default. pnpm 11
-      # reads only the `pnpm_config_*` spelling for this setting;
+      # and `git reset --hard`s it back before `pnpm run version`. The top-level
+      # `pnpm run` calls are the entry points: commands nested inside a
+      # `pnpm run` script (scripts/release.sh's `pnpm exec changeset tag`)
+      # already inherit `pnpm_config_verify_deps_before_run=false` from pnpm.
+      # Scoped to this job: CI and local runs keep the default. pnpm 11 reads
+      # only the `pnpm_config_*` spelling for this setting;
       # `npm_config_verify_deps_before_run` is ignored.
       pnpm_config_verify_deps_before_run: "false"
     steps:
