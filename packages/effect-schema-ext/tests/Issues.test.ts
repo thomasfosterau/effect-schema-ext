@@ -113,6 +113,41 @@ describe("pointers", () => {
     expect(Issues.pointers(issue, { prefix: [] })[0]?.pointer).toBe("/name");
   });
 
+  it("keeps a built-in check's expectation in the message (isMinLength)", () => {
+    const schema = Schema.Struct({ code: Schema.String.check(Schema.isMinLength(3)) });
+    expect(pointed(issueFor(schema, { code: "ab" }))).toMatchObject([
+      {
+        pointer: "/data/attributes/code",
+        tag: "InvalidValue",
+        message: "Expected a value with a length of at least 3",
+      },
+    ]);
+  });
+
+  it("keeps a check's own message when it states one", () => {
+    const withMessage = Schema.String.check(Schema.isMinLength(3, { message: "too short" }));
+    expect(Issues.pointers(issueFor(withMessage, "ab"))).toMatchObject([
+      { tag: "InvalidValue", message: "too short" },
+    ]);
+    const custom = Schema.String.check(
+      Schema.makeFilter((value: string) => (value === "x" ? true : "must be x"), {
+        identifier: "isX",
+        title: "is x",
+        description: "a fixture filter that states its own message",
+      }),
+    );
+    expect(Issues.pointers(issueFor(custom, "ab"))).toMatchObject([
+      { tag: "InvalidValue", message: "must be x" },
+    ]);
+  });
+
+  it("reports the leaf, not the filter, from leaves()", () => {
+    const schema = Schema.String.check(Schema.isMinLength(3));
+    expect(Issues.leaves(issueFor(schema, "ab"))).toMatchObject([
+      { path: [], issue: { _tag: "InvalidValue" } },
+    ]);
+  });
+
   it("escapes key segments in the emitted pointer", () => {
     const issue = issueFor(Schema.Struct({ "a/b": Schema.String }), { "a/b": 1 });
     expect(pointed(issue)[0]?.pointer).toBe("/data/attributes/a~1b");

@@ -35,6 +35,7 @@
  */
 
 import * as Option from "effect/Option";
+import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
 
 // ---------------------------------------------------------------------------
@@ -169,6 +170,18 @@ export const assign = <A>(value: A): TriState<A> => ({ _tag: "Assign", value });
 // ---------------------------------------------------------------------------
 
 /**
+ * What an argument to a nullable-encoding reader ({@link readNullOr},
+ * {@link suppliedNullOr}) must additionally satisfy: nothing for a plain
+ * nullable value, an unsatisfiable key for an `Option` — an `Option`-encoded
+ * field read as a nullable one would come back as `Assign(Option.none())`, a
+ * clear silently turned into an assignment. The key names the reader to use
+ * instead.
+ */
+type NotOption<A> = [Extract<A, Option.Option<unknown>>] extends [never]
+  ? unknown
+  : { readonly "an Option-encoded field is read with TriState.read / suppliedValue": never };
+
+/**
  * Read a {@link clearable} field (the `Option` encoding) into its
  * {@link TriState}, keeping all three states apart — the reader for a write
  * path.
@@ -196,7 +209,9 @@ export const read = <A>(field: Option.Option<A> | undefined): TriState<A> =>
  * {@link TriState}: `undefined` carries forward, `null` clears, anything else
  * — falsy values included — is assigned. The field's type is taken whole
  * (`string | null | undefined` reads as a `TriState<string>`), so a bare
- * `null` or `undefined` reads as a `TriState<never>` that fits any field.
+ * `null` or `undefined` reads as a `TriState<never>` that fits any field. An
+ * `Option` is rejected at compile time: read the `Option` encoding with
+ * {@link read}.
  *
  * @example
  * ```ts
@@ -209,7 +224,7 @@ export const read = <A>(field: Option.Option<A> | undefined): TriState<A> =>
  * @since 0.1.0
  * @category readers
  */
-export const readNullOr = <A>(field: A): TriState<NonNullable<A>> =>
+export const readNullOr = <A>(field: A & NotOption<A>): TriState<NonNullable<A>> =>
   field === undefined ? carryForward : field === null ? clear : assign(field);
 
 /**
@@ -268,6 +283,64 @@ export const toNullOr = <A>(field: Option.Option<A> | undefined): A | null | und
   field === undefined ? undefined : Option.getOrNull(field);
 
 /**
+ * One field of {@link NullOrFields}: an `Option<A>` becomes `A | null`; any
+ * other value type is unchanged.
+ *
+ * @since 0.1.0
+ * @category models
+ */
+// oxlint-disable-next-line effect/prefer-option-over-null -- the nullable encoding IS the target shape
+export type NullOrValue<V> = V extends Option.Option<infer A> ? A | null : V;
+
+/**
+ * A decoded update input with every `Option`-valued field converted to the
+ * nullable encoding ({@link toNullOrFields}). Key optionality is kept: an
+ * optional key stays optional, so "absent" is still "absent".
+ *
+ * @since 0.1.0
+ * @category models
+ */
+export type NullOrFields<I> = { readonly [K in keyof I]: NullOrValue<I[K]> };
+
+/**
+ * {@link toNullOr} over a whole decoded update input: every `Option`-valued
+ * field becomes `null` (clear) or its value (set); an absent key stays absent
+ * and every non-`Option` field passes through. One call turns an
+ * `Option`-encoded update input (website, gardeneria) into the shape a `SET`
+ * map built from the input's own keys takes — effect-drizzle-ext's
+ * `updateSetMap(TriState.toNullOrFields(input), writable)`.
+ *
+ * @example
+ * ```ts
+ * import { Option, Schema } from "effect"
+ * import { TriState } from "@thomasfosterau/effect-schema-ext"
+ *
+ * const UpdateNote = Schema.Struct({
+ *   id: Schema.String,
+ *   title: TriState.clearable(Schema.String),
+ *   summary: TriState.clearable(Schema.String)
+ * })
+ * const input = Schema.decodeUnknownSync(UpdateNote)({ id: "n1", summary: null })
+ * console.log(TriState.toNullOrFields(input))
+ * // → { id: 'n1', summary: null }
+ * console.log(TriState.toNullOrFields({ id: "n1", title: Option.some("New") }))
+ * // → { id: 'n1', title: 'New' }
+ * ```
+ *
+ * @since 0.1.0
+ * @category converters
+ */
+export const toNullOrFields = <I extends { readonly [key: string]: unknown }>(
+  input: I,
+): NullOrFields<I> =>
+  // SAFETY: `Record.map` keeps exactly `input`'s own keys and replaces each
+  // `Option` value with its value or `null`, which is what `NullOrFields<I>`
+  // states per key.
+  Record.map(input, (value) =>
+    Option.isOption(value) ? Option.getOrNull(value) : value,
+  ) as NullOrFields<I>;
+
+/**
  * The value an update actually **supplies** for a {@link clearable} field,
  * collapsing the two states that supply no value at all: an absent key (carry
  * forward) and an explicit `Option.none()` (clear).
@@ -303,7 +376,7 @@ export const suppliedValue = <A>(field: Option.Option<A> | undefined): Option.Op
  * {@link suppliedValue} for a {@link clearableNullOr} field: `undefined`
  * (carry forward) and `null` (clear) both become `Option.none()`; any other
  * value — falsy ones included — is supplied. Side effects only, never a write
- * path.
+ * path. An `Option` is rejected at compile time: use {@link suppliedValue}.
  *
  * @example
  * ```ts
@@ -316,6 +389,5 @@ export const suppliedValue = <A>(field: Option.Option<A> | undefined): Option.Op
  * @since 0.1.0
  * @category readers
  */
-// oxlint-disable-next-line effect/prefer-option-over-null -- the `| null | undefined` IS the tri-state in the nullable encoding; folding its two no-value states is precisely what this function does
-export const suppliedNullOr = <A>(field: A | null | undefined): Option.Option<A> =>
-  Option.fromNullishOr(field);
+export const suppliedNullOr = <A>(field: A & NotOption<A>): Option.Option<NonNullable<A>> =>
+  Option.fromNullishOr<A>(field);

@@ -28,7 +28,7 @@ Never use `Schema.OptionFromOptionalNullOr` for an update field: it decodes abse
 **Separating readers** — for write paths:
 
 - `TriState.read(field)` / `TriState.readNullOr(field)` → a `TriState<A>`: `CarryForward` | `Clear` | `Assign<A>`; fold it with `TriState.match({ onCarryForward, onClear, onAssign })`.
-- `TriState.toNullOr(field)` converts the `Option` encoding to the nullable one (`undefined` / `null` / value) — what a SQL `SET` map built from the input's own keys (effect-drizzle-ext's `updateSetMap`) consumes.
+- `TriState.toNullOr(field)` converts the `Option` encoding to the nullable one (`undefined` / `null` / value); `TriState.toNullOrFields(input)` does it for every `Option`-valued field of a decoded update input at once, keeping absent keys absent — so an `Option`-encoded input feeds a SQL `SET` map built from its own keys in one call: `updateSetMap(TriState.toNullOrFields(input), writable)` (effect-drizzle-ext's `./update`).
 
 ```ts
 import { Option, Schema } from "effect";
@@ -46,13 +46,15 @@ TriState.toNullOr(input.summary); // null  — a clear, not a carry-forward
 - `TriState.suppliedValue(field: Option<A> | undefined): Option<A>` — the `Option` encoding.
 - `TriState.suppliedNullOr(field: A | null | undefined): Option<A>` — the nullable encoding.
 
+`readNullOr` and `suppliedNullOr` refuse an `Option` at compile time: an `Option`-encoded field read as a nullable one would turn a clear into an assignment.
+
 Both map "absent" and "clear" to `Option.none()`. Never use them to compute a column value.
 
 ## Issues
 
 - `Issues.pathToJsonPointer(path)` — an RFC 6901 pointer (`~` → `~0`, `/` → `~1`; `[]` → `""`).
 - `Issues.leaves(issue)` — a `SchemaIssue` tree flattened to `{ path, issue }` leaves: `Pointer` extends the path, `Composite` and a non-empty `AnyOf` fan out, `Filter` / `Encoding` unwrap, anything else (and an empty `AnyOf`) is a leaf.
-- `Issues.pointers(issue, { prefix })` — each leaf as `{ pointer, tag, message, issue }`.
+- `Issues.pointers(issue, { prefix })` — each leaf as `{ pointer, tag, message, issue }`. `message` is Effect's default formatting; a built-in check's failure (`isMinLength(3)`) keeps its expectation ("Expected a value with a length of at least 3").
 
 ```ts
 import { Effect, Schema } from "effect";
@@ -70,10 +72,12 @@ The envelope is yours: a JSON:API error object is `{ status, code: tag, detail: 
 
 ## Bounded
 
+The cap is always yours: there is no default page cap. The exports shared with effect-jsonapi's `FlatQuery` (`PageOffset`, `pageLimit`, `pagination`, `PaginationOptions`, `DefaultedPagination`, `RequiredPagination`, `idList`, `IdList`, `DEFAULT_MAX_ID_LIST`) have its names, signatures and behaviour, so moving from one to the other is an import change.
+
 - `Bounded.NonNegative` — a finite number `>= 0`.
-- `Bounded.pageLimit(max)`, `Bounded.PageLimit` (`max` = `MAX_PAGE_LIMIT` = 1000), `Bounded.PageOffset` — positive / non-negative integers.
-- `Bounded.pagination({ maxLimit?, defaultLimit? })` — the `{ limit, offset }` fields, defaulting to `DEFAULT_PAGE_LIMIT` (50) and `0` on decode. website and gardeneria cap at 1000 (the default); preferenceflow at `pagination({ maxLimit: 100 })`.
-- `Bounded.idList({ maxLength?, dedupe? })`, `Bounded.IdList` — a comma-separated list of UUIDs (or the repeated-key array `UrlParams.toRecord` produces), non-empty, at most `MAX_ID_LIST` (100) as sent, repeats dropped unless `dedupe: false`.
+- `Bounded.pageLimit(maxLimit)` — a positive integer `<= maxLimit`; `Bounded.PageOffset` — a non-negative integer.
+- `Bounded.pagination({ maxLimit, defaultLimit? })` — the `{ offset, limit }` fields. By default both are optional on the wire and decode to `0` / `DEFAULT_PAGE_LIMIT` (50); with `defaultLimit: false` both are required. website and gardeneria: `pagination({ maxLimit: 1000, defaultLimit: false })` (their `ListInput`) or `pagination({ maxLimit: 1000 })` (their `PaginationInput`); preferenceflow: `pagination({ maxLimit: 100 })`.
+- `Bounded.idList({ maxLength?, dedupe? })`, `Bounded.IdList` — a comma-separated list of UUIDs (or the repeated-key array `UrlParams.toRecord` produces), non-empty, at most `DEFAULT_MAX_ID_LIST` (100) as sent. Repeats are kept unless `dedupe: true`.
 
 ```ts
 import { Schema } from "effect";
@@ -83,14 +87,14 @@ const ListPeople = Schema.Struct({
   ...Bounded.pagination({ maxLimit: 100 }),
   ids: Schema.optional(Bounded.IdList),
 });
-Schema.decodeUnknownSync(ListPeople)({}); // { limit: 50, offset: 0 }
+Schema.decodeUnknownSync(ListPeople)({}); // { offset: 0, limit: 50 }
 ```
 
 ## Ids
 
 - `Ids.Uuid` — a string that parses as a UUID.
 - `Ids.make(brand)` — `Uuid.pipe(Schema.brand(brand))`; `Ids.refine(parent, brand)` stacks a child brand (a `PersonId` is an `EntityId`, not the other way round). Brands are `Type`-side only; the wire stays `string`.
-- `Ids.SLUG_PATTERN`, `Ids.Slug` — lowercase kebab-case; `Ids.slug({ maxLength?, reserved? })` adds a length bound and rejects reserved path segments. website / gardeneria's node slug is `Ids.slug({ maxLength: 200, reserved: ["create", "edit", "search", "new", "delete"] })`; preferenceflow's is `Ids.Slug`.
+- `Ids.SLUG_PATTERN` — lowercase kebab-case. `Ids.slug({ maxLength?, reserved? })` — 1 to `maxLength` (default 200) characters of it, not a reserved path segment; `Ids.Slug` is `slug()`. `Uuid`, `SLUG_PATTERN`, `slug` and `Slug` match effect-jsonapi's `FlatQuery`, messages included. website / gardeneria's node slug is `Ids.slug({ reserved: ["create", "edit", "search", "new", "delete"] })`.
 
 ## LiteralExact
 

@@ -4,10 +4,16 @@
  * The bounded list-input schemas (`src/Bounded.ts`), ported from the
  * applications:
  *
- * - pagination — preferenceflow `packages/models/tests/inputs.test.ts` and the
- *   pagination cases of website / gardeneria `packages/models/tests/sort.test.ts`
- *   (the `?sort=` grammar itself is effect-jsonapi's, not ported here);
+ * - pagination — preferenceflow `packages/models/tests/inputs.test.ts` (the
+ *   defaulted window) and website / gardeneria `ListInput` (the required
+ *   window, `defaultLimit: false`), plus the pagination cases of website /
+ *   gardeneria `packages/models/tests/sort.test.ts` (the `?sort=` grammar is
+ *   effect-jsonapi's, not ported here);
  * - `IdList` — gardeneria `packages/models/tests/publications-model.test.ts`.
+ *
+ * The "FlatQuery parity" cases pin the behaviour effect-jsonapi's
+ * `FlatQuery` (main, 2026-09-25) has for the same exports, so its interim
+ * copies can move here as an import change.
  *
  * @module tests/Bounded
  */
@@ -33,42 +39,49 @@ describe("NonNegative", () => {
   });
 });
 
-describe("PageLimit / PageOffset", () => {
-  it("caps the default page size at MAX_PAGE_LIMIT", () => {
-    expect(Bounded.MAX_PAGE_LIMIT).toBe(1000);
-    expect(Bounded.DEFAULT_PAGE_LIMIT).toBeLessThanOrEqual(Bounded.MAX_PAGE_LIMIT);
-    expect(accepts(Bounded.PageLimit, Bounded.MAX_PAGE_LIMIT)).toBe(true);
-    expect(accepts(Bounded.PageLimit, Bounded.MAX_PAGE_LIMIT + 1)).toBe(false);
+describe("pageLimit / PageOffset", () => {
+  it("caps a limit at the caller's maxLimit", () => {
+    // preferenceflow caps its lists at 100, website and gardeneria at 1000.
+    for (const [cap, over] of [
+      [100, 101],
+      [1000, 1001],
+    ] as const) {
+      expect(accepts(Bounded.pageLimit(cap), cap)).toBe(true);
+      expect(accepts(Bounded.pageLimit(cap), over)).toBe(false);
+    }
   });
 
   it("rejects a zero, negative, fractional or non-finite limit", () => {
-    expect(accepts(Bounded.PageLimit, 0)).toBe(false);
-    expect(accepts(Bounded.PageLimit, -1)).toBe(false);
-    expect(accepts(Bounded.PageLimit, 2.5)).toBe(false);
-    expect(accepts(Bounded.PageLimit, Number.POSITIVE_INFINITY)).toBe(false);
+    const Limit = Bounded.pageLimit(1000);
+    expect(accepts(Limit, 0)).toBe(false);
+    expect(accepts(Limit, -1)).toBe(false);
+    expect(accepts(Limit, 2.5)).toBe(false);
+    expect(accepts(Limit, Number.POSITIVE_INFINITY)).toBe(false);
+    expect(accepts(Limit, Number.NaN)).toBe(false);
   });
 
-  it("rejects a negative, fractional or string offset", () => {
+  it("rejects a negative, fractional, non-finite or string offset", () => {
     expect(accepts(Bounded.PageOffset, 0)).toBe(true);
     expect(accepts(Bounded.PageOffset, -1)).toBe(false);
     expect(accepts(Bounded.PageOffset, 0.5)).toBe(false);
+    expect(accepts(Bounded.PageOffset, Number.POSITIVE_INFINITY)).toBe(false);
     expect(accepts(Bounded.PageOffset, "0")).toBe(false);
   });
 
-  it("builds a limit with a caller-chosen cap", () => {
-    // preferenceflow caps its lists at 100, website and gardeneria at 1000.
-    const Limit = Bounded.pageLimit(100);
-    expect(accepts(Limit, 100)).toBe(true);
-    expect(accepts(Limit, 101)).toBe(false);
+  it("has no default page cap", () => {
+    // packages/effect-schema-ext/CLAUDE.md: a page cap is a parameter, never a default.
+    expect(Object.keys(Bounded)).not.toContain("PageLimit");
+    expect(Object.keys(Bounded)).not.toContain("MAX_PAGE_LIMIT");
   });
 });
 
-describe("pagination", () => {
+describe("pagination — defaulted window", () => {
   const PaginationInput = Schema.Struct(Bounded.pagination({ maxLimit: 100 }));
   const decode = Schema.decodeUnknownSync(PaginationInput);
 
   it("defaults offset and limit when omitted", () => {
     expect(decode({})).toEqual({ offset: 0, limit: Bounded.DEFAULT_PAGE_LIMIT });
+    expect(Bounded.DEFAULT_PAGE_LIMIT).toBe(50);
   });
 
   it("accepts a bounded window", () => {
@@ -83,23 +96,66 @@ describe("pagination", () => {
     expect(() => decode({ offset: 0.5 })).toThrow();
   });
 
-  it("honours a caller-chosen default and falls back to MAX_PAGE_LIMIT as the cap", () => {
-    const Wide = Schema.Struct(Bounded.pagination({ defaultLimit: 20 }));
-    expect(Schema.decodeUnknownSync(Wide)({})).toEqual({ offset: 0, limit: 20 });
-    expect(accepts(Wide, { limit: Bounded.MAX_PAGE_LIMIT })).toBe(true);
-    expect(accepts(Wide, { limit: Bounded.MAX_PAGE_LIMIT + 1 })).toBe(false);
+  it("honours a caller-chosen default", () => {
+    const Twenty = Schema.Struct(Bounded.pagination({ maxLimit: 1000, defaultLimit: 20 }));
+    expect(Schema.decodeUnknownSync(Twenty)({})).toEqual({ offset: 0, limit: 20 });
+    expect(accepts(Twenty, { limit: 1000 })).toBe(true);
+    expect(accepts(Twenty, { limit: 1001 })).toBe(false);
   });
 
   it("merges alongside a list input's own filters", () => {
     const List = Schema.Struct({
-      ...Bounded.pagination(),
+      ...Bounded.pagination({ maxLimit: 100 }),
       slug: Schema.optional(Schema.String),
     });
     expect(Schema.decodeUnknownSync(List)({ limit: 10, slug: "a-slug" })).toEqual({
-      limit: 10,
       offset: 0,
+      limit: 10,
       slug: "a-slug",
     });
+  });
+});
+
+describe("pagination — required window (defaultLimit: false)", () => {
+  // website / gardeneria `ListInput`: the bracket-paginated wire query always
+  // carries both keys, so the decoded input has no defaults (SEC-INPUT-003).
+  const List = Schema.Struct(Bounded.pagination({ maxLimit: 1000, defaultLimit: false }));
+
+  it("requires both keys", () => {
+    expect(accepts(List, {})).toBe(false);
+    expect(accepts(List, { limit: 10 })).toBe(false);
+    expect(accepts(List, { offset: 0 })).toBe(false);
+    expect(Schema.decodeUnknownSync(List)({ offset: 0, limit: 10 })).toEqual({
+      offset: 0,
+      limit: 10,
+    });
+  });
+
+  it("still bounds both keys", () => {
+    expect(accepts(List, { offset: 0, limit: 1001 })).toBe(false);
+    expect(accepts(List, { offset: -1, limit: 10 })).toBe(false);
+  });
+});
+
+describe("FlatQuery parity", () => {
+  it("pagination decodes offset before limit, as FlatQuery does", () => {
+    const decoded = Schema.decodeUnknownSync(Schema.Struct(Bounded.pagination({ maxLimit: 100 })))(
+      {},
+    );
+    expect(Object.keys(decoded)).toEqual(["offset", "limit"]);
+  });
+
+  it("the id-list bound is FlatQuery's DEFAULT_MAX_ID_LIST", () => {
+    expect(Bounded.DEFAULT_MAX_ID_LIST).toBe(100);
+  });
+
+  it("IdList keeps repeats by default, as FlatQuery's does", () => {
+    expect(Schema.decodeUnknownSync(Bounded.IdList)(`${A},${A}`)).toEqual([A, A]);
+  });
+
+  it("IdList re-encodes to exactly the wire value it decoded", () => {
+    const decoded = Schema.decodeUnknownSync(Bounded.IdList)(`${B},${A},${B}`);
+    expect(Schema.encodeSync(Bounded.IdList)(decoded)).toBe(`${B},${A},${B}`);
   });
 });
 
@@ -125,21 +181,10 @@ describe("IdList — the filter[ids] codec", () => {
   });
 
   it("is bounded, so a hostile filter cannot drive an arbitrarily wide IN", () => {
-    const many = Array.from({ length: Bounded.MAX_ID_LIST + 1 }, () => A).join(",");
+    const many = Array.from({ length: Bounded.DEFAULT_MAX_ID_LIST + 1 }, () => A).join(",");
     expect(accepts(Bounded.IdList, many)).toBe(false);
-    const most = Array.from({ length: Bounded.MAX_ID_LIST }, () => A).join(",");
+    const most = Array.from({ length: Bounded.DEFAULT_MAX_ID_LIST }, () => A).join(",");
     expect(accepts(Bounded.IdList, most)).toBe(true);
-  });
-
-  it("drops repeated ids, keeping first-occurrence order", () => {
-    expect(decode(`${B},${A},${B}`)).toEqual([B, A]);
-  });
-
-  it("keeps repeats and round-trips the wire value with dedupe: false", () => {
-    const Raw = Bounded.idList({ dedupe: false });
-    const decoded = Schema.decodeUnknownSync(Raw)(`${A},${A}`);
-    expect(decoded).toEqual([A, A]);
-    expect(Schema.encodeSync(Raw)(decoded)).toBe(`${A},${A}`);
   });
 
   it("keeps the bound on the decoded side too, so encoding an empty list fails", () => {
@@ -156,5 +201,23 @@ describe("IdList — the filter[ids] codec", () => {
     const Two = Bounded.idList({ maxLength: 2 });
     expect(accepts(Two, `${A},${B}`)).toBe(true);
     expect(accepts(Two, `${A},${B},${A}`)).toBe(false);
+  });
+});
+
+describe("idList({ dedupe: true })", () => {
+  const Deduped = Bounded.idList({ dedupe: true });
+
+  it("drops repeated ids, keeping first-occurrence order", () => {
+    expect(Schema.decodeUnknownSync(Deduped)(`${B},${A},${B}`)).toEqual([B, A]);
+  });
+
+  it("encodes the de-duplicated list back to the wire string", () => {
+    expect(Schema.encodeSync(Deduped)([B, A])).toBe(`${B},${A}`);
+  });
+
+  it("checks the bound on the list as sent, before dropping repeats", () => {
+    const Two = Bounded.idList({ maxLength: 2, dedupe: true });
+    expect(accepts(Two, `${A},${A},${A}`)).toBe(false);
+    expect(Schema.decodeUnknownSync(Two)(`${A},${A}`)).toEqual([A]);
   });
 });

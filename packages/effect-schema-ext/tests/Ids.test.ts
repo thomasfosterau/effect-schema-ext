@@ -3,7 +3,7 @@
  *
  * The identifier schemas (`src/Ids.ts`). The slug cases are ported from
  * website / gardeneria `packages/models/tests/node-slug.test.ts` (their `Slug`
- * is `slug({ maxLength: 200, reserved: [...] })` here); the brand's
+ * is `slug({ reserved: [...] })` here, whose default bound is their 200); the brand's
  * compile-time guarantees are in `Ids.types.ts`.
  *
  * @module tests/Ids
@@ -45,11 +45,16 @@ describe("make / refine — branded UUID ids", () => {
 });
 
 describe("Slug", () => {
-  it("accepts kebab-case of any length and rejects the malformed", () => {
+  it("accepts kebab-case up to 200 characters and rejects the malformed", () => {
     expect(Schema.is(Ids.Slug)("anthony-albanese")).toBe(true);
-    expect(Schema.is(Ids.Slug)("a".repeat(500))).toBe(true);
+    expect(Schema.is(Ids.Slug)("a".repeat(200))).toBe(true);
+    expect(Schema.is(Ids.Slug)("a".repeat(201))).toBe(false);
     expect(Schema.is(Ids.Slug)("My-Post")).toBe(false);
     expect(Schema.is(Ids.Slug)("")).toBe(false);
+  });
+
+  it("reserves nothing", () => {
+    expect(Schema.is(Ids.Slug)("edit")).toBe(true);
   });
 
   it("exposes the pattern for route matchers", () => {
@@ -59,11 +64,10 @@ describe("Slug", () => {
   });
 });
 
-describe("slug({ maxLength: 200, reserved }) — the node slug", () => {
-  const Slug = Ids.slug({
-    maxLength: 200,
-    reserved: ["create", "edit", "search", "new", "delete"],
-  });
+describe("slug({ reserved }) — the node slug", () => {
+  // website / gardeneria `node-slug.ts`: 1–200 characters (the default bound)
+  // and the static sibling routes reserved.
+  const Slug = Ids.slug({ reserved: ["create", "edit", "search", "new", "delete"] });
   const decode = Schema.decodeUnknownSync(Slug);
 
   it("accepts a lowercase kebab-case slug", () => {
@@ -120,5 +124,36 @@ describe("slug({ maxLength: 200, reserved }) — the node slug", () => {
 
   it("reserves nothing by default", () => {
     expect(Schema.is(Ids.slug())("edit")).toBe(true);
+  });
+
+  it("takes a caller-chosen bound", () => {
+    expect(Schema.is(Ids.slug({ maxLength: 5 }))("abcde")).toBe(true);
+    expect(Schema.is(Ids.slug({ maxLength: 5 }))("abcdef")).toBe(false);
+  });
+});
+
+describe("FlatQuery parity", () => {
+  it("defaults the slug bound to 200, as FlatQuery.slug does", () => {
+    expect(Ids.DEFAULT_MAX_SLUG_LENGTH).toBe(200);
+    expect(Schema.is(Ids.slug())("a".repeat(200))).toBe(true);
+    expect(Schema.is(Ids.slug())("a".repeat(201))).toBe(false);
+  });
+
+  it("reports the length bound with isLengthBetween's wire message", () => {
+    // FlatQuery.slug checks `Schema.isLengthBetween(1, maxLength)`; the message
+    // a client sees for an over-long or empty slug must be the same.
+    const expected = /Expected a value with a length between 1 and 200/;
+    expect(() => Schema.decodeUnknownSync(Ids.Slug)("a".repeat(201))).toThrow(expected);
+    expect(() => Schema.decodeUnknownSync(Ids.Slug)("")).toThrow(expected);
+  });
+
+  it("uses FlatQuery's pattern and messages", () => {
+    expect(Ids.SLUG_PATTERN.source).toBe("^[a-z0-9]+(?:-[a-z0-9]+)*$");
+    expect(() => Schema.decodeUnknownSync(Ids.Slug)("Not A Slug")).toThrow(
+      'must be lowercase letters, numbers, and hyphens (e.g. "my-post-title")',
+    );
+    expect(() => Schema.decodeUnknownSync(Ids.slug({ reserved: ["edit"] }))("edit")).toThrow(
+      '"edit" is a reserved path segment and cannot be used as a slug',
+    );
   });
 });

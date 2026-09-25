@@ -6,7 +6,7 @@
 | --- | --- |
 | [`TriState`](packages/effect-schema-ext/README.md#tristate) | The update tri-state (absent = carry forward, `null` = clear, value = set): the two field encodings and the readers that keep — or deliberately fold — the three states. |
 | [`Issues`](packages/effect-schema-ext/README.md#issues) | A `SchemaIssue` tree flattened to its leaves and rendered as RFC 6901 JSON Pointers. |
-| [`Bounded`](packages/effect-schema-ext/README.md#bounded) | Bounded pagination (`PageLimit`, `PageOffset`, `pagination`), the comma-separated UUID `IdList`, `NonNegative`. |
+| [`Bounded`](packages/effect-schema-ext/README.md#bounded) | Bounded pagination (`pageLimit`, `PageOffset`, `pagination` — the cap is always the caller's), the comma-separated UUID `IdList`, `NonNegative`. |
 | [`Ids`](packages/effect-schema-ext/README.md#ids) | `Uuid`, branded-UUID ids (`make`, `refine`), and slugs (`SLUG_PATTERN`, `Slug`, `slug`). |
 | [`LiteralExact`](packages/effect-schema-ext/README.md#literalexact) | Literal tuples checked at compile time to cover a union exactly. |
 | [`Ast`](packages/effect-schema-ext/README.md#ast) | Field introspection by AST and behavioural decode probe (optional / nullable / array / date). |

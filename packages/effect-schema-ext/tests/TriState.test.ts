@@ -116,6 +116,56 @@ describe("toNullOr converts the Option encoding to the nullable one without fold
   });
 });
 
+describe("toNullOrFields converts a whole Option-encoded update input", () => {
+  const Update = Schema.Struct({
+    id: Schema.String,
+    title: TriState.clearable(Schema.String),
+    summary: TriState.clearable(Schema.String),
+    count: TriState.clearable(Schema.Finite),
+    name: Schema.optional(Schema.String),
+  });
+  const decode = Schema.decodeUnknownSync(Update);
+
+  it("maps none to null, some to its value, and passes other fields through", () => {
+    const input = decode({ id: "a", title: "T", summary: null, count: 0, name: "N" });
+    expect(TriState.toNullOrFields(input)).toStrictEqual({
+      id: "a",
+      title: "T",
+      summary: null,
+      count: 0,
+      name: "N",
+    });
+  });
+
+  it("leaves an absent key absent — never a present undefined or a null", () => {
+    const converted = TriState.toNullOrFields(decode({ id: "a", summary: null }));
+    expect(converted).toStrictEqual({ id: "a", summary: null });
+    expect("title" in converted).toBe(false);
+    expect("count" in converted).toBe(false);
+  });
+
+  it("keeps an explicit undefined as undefined (carry forward)", () => {
+    expect(TriState.toNullOrFields({ id: "a", summary: undefined })).toStrictEqual({
+      id: "a",
+      summary: undefined,
+    });
+  });
+
+  it("agrees with toNullOr field by field", () => {
+    const input = decode({ id: "a", title: "T", summary: null });
+    const converted = TriState.toNullOrFields(input);
+    expect(converted.title).toBe(TriState.toNullOr(input.title));
+    expect(converted.summary).toBe(TriState.toNullOr(input.summary));
+  });
+
+  it("keeps the input's own key order", () => {
+    const converted = TriState.toNullOrFields(decode({ summary: null, id: "a", title: "T" }));
+    expect(Object.keys(converted)).toEqual(
+      Object.keys(decode({ summary: null, id: "a", title: "T" })),
+    );
+  });
+});
+
 describe("clearable — the Option encoding on the wire", () => {
   const Update = Schema.Struct({
     id: Schema.String,

@@ -18,6 +18,10 @@
  * reserved-segment rejection an application routing `/<collection>/<slug>`
  * needs so a slug can never shadow a static sibling route.
  *
+ * `Uuid`, `SLUG_PATTERN`, `slug` and `Slug` keep the names, signatures and
+ * behaviour of effect-jsonapi's `FlatQuery`, whose interim copies move here,
+ * so that move is an import change, not an API change.
+ *
  * @since 0.1.0
  */
 
@@ -125,34 +129,12 @@ export const SLUG_PATTERN: RegExp = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SLUG_PATTERN_MESSAGE = `must be lowercase letters, numbers, and hyphens (e.g. "my-post-title")`;
 
 /**
- * A {@link SLUG_PATTERN}-conformant slug, unbounded and with no reserved
- * segments. Use {@link slug} for either.
- *
- * @example
- * ```ts
- * import { Schema } from "effect"
- * import { Ids } from "@thomasfosterau/effect-schema-ext"
- *
- * console.log(Schema.is(Ids.Slug)("anthony-albanese"))
- * // → true
- * console.log(Schema.is(Ids.Slug)("Anthony--Albanese"))
- * // → false
- * ```
+ * The longest slug {@link slug} accepts when no `maxLength` is given.
  *
  * @since 0.1.0
- * @category schemas
+ * @category constants
  */
-export const Slug: Schema.String = Schema.String.check(
-  Schema.isPattern(SLUG_PATTERN, { message: SLUG_PATTERN_MESSAGE }),
-);
-
-/**
- * The decoded type of {@link Slug}: a plain `string` (unbranded).
- *
- * @since 0.1.0
- * @category models
- */
-export type Slug = typeof Slug.Type;
+export const DEFAULT_MAX_SLUG_LENGTH = 200;
 
 /**
  * Options of {@link slug}.
@@ -161,27 +143,28 @@ export type Slug = typeof Slug.Type;
  * @category models
  */
 export interface SlugOptions {
-  /** The longest slug accepted. Unbounded when omitted. */
+  /** The longest slug accepted. Defaults to {@link DEFAULT_MAX_SLUG_LENGTH} (`200`). */
   readonly maxLength?: number | undefined;
   /**
-   * Path segments a slug may not be — the static sibling routes of the
-   * collection it names (`create`, `edit`, `search`, …), so a slug can never
-   * shadow one and become unreachable. None when omitted.
+   * Path segments a slug may never equal — the static sibling routes of the
+   * collection it names (`create`, `edit`, `search`, …), which a slug would
+   * otherwise shadow and make unreachable. None when omitted.
    */
   readonly reserved?: Iterable<string> | undefined;
 }
 
 /**
- * A {@link SLUG_PATTERN}-conformant slug with an optional length bound and an
- * optional set of reserved segments. Uniqueness is a storage concern, not a
- * schema one.
+ * A human-readable slug: 1 to `maxLength` characters of {@link SLUG_PATTERN},
+ * not a reserved path segment. Uniqueness is a storage concern, not a schema
+ * one. Behaves exactly as effect-jsonapi's `FlatQuery.slug`, including its
+ * messages.
  *
  * @example
  * ```ts
  * import { Schema } from "effect"
  * import { Ids } from "@thomasfosterau/effect-schema-ext"
  *
- * const PostSlug = Ids.slug({ maxLength: 200, reserved: ["create", "edit", "search", "new", "delete"] })
+ * const PostSlug = Ids.slug({ reserved: ["create", "edit", "search", "new", "delete"] })
  *
  * console.log(Schema.is(PostSlug)("my-post-title"))
  * // → true
@@ -196,10 +179,8 @@ export interface SlugOptions {
  */
 export const slug = (options?: SlugOptions): Schema.String => {
   const reserved = HashSet.fromIterable(options?.reserved ?? []);
-  const maxLength = options?.maxLength;
   return Schema.String.check(
-    Schema.isMinLength(1),
-    ...(maxLength === undefined ? [] : [Schema.isMaxLength(maxLength)]),
+    Schema.isLengthBetween(1, options?.maxLength ?? DEFAULT_MAX_SLUG_LENGTH),
     Schema.isPattern(SLUG_PATTERN, { message: SLUG_PATTERN_MESSAGE }),
     Schema.makeFilter(
       (value: string) =>
@@ -214,3 +195,28 @@ export const slug = (options?: SlugOptions): Schema.String => {
     ),
   );
 };
+
+/**
+ * {@link slug} with its defaults: 1 to 200 characters, no reserved segments.
+ *
+ * @example
+ * ```ts
+ * import { Schema } from "effect"
+ * import { Ids } from "@thomasfosterau/effect-schema-ext"
+ *
+ * console.log(Schema.is(Ids.Slug)("anthony-albanese"), Schema.is(Ids.Slug)("Anthony--Albanese"))
+ * // → true false
+ * ```
+ *
+ * @since 0.1.0
+ * @category schemas
+ */
+export const Slug: Schema.String = slug();
+
+/**
+ * The decoded type of {@link Slug}: a plain `string` (unbranded).
+ *
+ * @since 0.1.0
+ * @category models
+ */
+export type Slug = typeof Slug.Type;

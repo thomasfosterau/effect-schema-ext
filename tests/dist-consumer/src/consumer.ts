@@ -12,7 +12,7 @@
  * @module dist-consumer
  */
 
-import type * as Option from "effect/Option";
+import * as Option from "effect/Option";
 import type * as Schema from "effect/Schema";
 import type * as SchemaIssue from "effect/SchemaIssue";
 import {
@@ -47,6 +47,11 @@ const Update = { summary, birthPlaceId: TriState.clearableNullOr(PersonId) };
 
 // ── Bounded ────────────────────────────────────────────────────────────
 const pagination = Bounded.pagination({ maxLimit: 100 });
+const strictPagination = Bounded.pagination({ maxLimit: 100, defaultLimit: false });
+// @ts-expect-error -- `maxLimit` stays required through declaration emit
+export const uncapped = Bounded.pagination({});
+// @ts-expect-error -- the Option guard survives declaration emit
+export const misread = TriState.readNullOr(Option.none<string>());
 
 // ── LiteralExact ───────────────────────────────────────────────────────
 const statuses = LiteralExact.tuple<"a" | "b">()(["a", "b"]);
@@ -71,7 +76,14 @@ export type Checks = [
   Assert<Equals<typeof Bounded.IdList.Type, ReadonlyArray<string>>>,
   Assert<Equals<typeof Bounded.IdList.Encoded, string | ReadonlyArray<string>>>,
   Assert<Equals<typeof pagination.limit.Type, number>>,
-  Assert<Equals<typeof BoundedEntry.PageLimit, typeof Bounded.PageLimit>>,
+  Assert<Equals<typeof BoundedEntry.PageOffset, typeof Bounded.PageOffset>>,
+  Assert<Equals<typeof strictPagination, Bounded.RequiredPagination>>,
+  Assert<
+    Equals<
+      ReturnType<typeof TriState.toNullOrFields<{ readonly a: Option.Option<string> }>>,
+      { readonly a: string | null }
+    >
+  >,
   // Issues
   Assert<Equals<Parameters<typeof Issues.leaves>[0], SchemaIssue.Issue>>,
   Assert<Equals<ReturnType<typeof Issues.pathToJsonPointer>, string>>,

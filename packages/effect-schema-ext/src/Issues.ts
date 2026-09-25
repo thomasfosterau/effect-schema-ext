@@ -17,15 +17,12 @@
  */
 
 import * as Array from "effect/Array";
+import * as JsonPointer from "effect/JsonPointer";
 import * as Match from "effect/Match";
 import * as SchemaIssue from "effect/SchemaIssue";
 
-/**
- * Escape one RFC 6901 reference token: `~` → `~0` first, then `/` → `~1`, so
- * the result is unambiguous.
- */
-const escapeToken = (segment: PropertyKey): string =>
-  String(segment).replaceAll("~", "~0").replaceAll("/", "~1");
+/** One path segment as an escaped RFC 6901 reference token (Effect's own escaping). */
+const escapeToken = (segment: PropertyKey): string => JsonPointer.escapeToken(String(segment));
 
 /**
  * An RFC 6901 JSON Pointer from a path of property keys:
@@ -85,8 +82,28 @@ export interface Leaf {
  * @since 0.1.0
  * @category destructors
  */
-export const leaves = (issue: SchemaIssue.Issue): ReadonlyArray<Leaf> => {
-  const found: Array<Leaf> = [];
+export const leaves = (issue: SchemaIssue.Issue): ReadonlyArray<Leaf> =>
+  Array.map(walkLeaves(issue), ({ path, issue: leaf }) => ({ path, issue: leaf }));
+
+/**
+ * A leaf plus the node its message is best formatted from: the leaf itself,
+ * or — for a built-in check (`isMinLength`, `isPattern`, …) whose failure is
+ * an `InvalidValue` carrying no message of its own — the `Filter` wrapping it,
+ * which knows what was expected ("Expected a value with a length of at least
+ * 3" rather than "Expected a valid value").
+ */
+interface WalkedLeaf extends Leaf {
+  readonly formatFrom: SchemaIssue.Issue;
+}
+
+/** An `InvalidValue` that states no message of its own. */
+const isBareInvalidValue = (issue: SchemaIssue.Issue): boolean =>
+  issue._tag === "InvalidValue" && issue.annotations?.message === undefined;
+
+const walkLeaves = (issue: SchemaIssue.Issue): ReadonlyArray<WalkedLeaf> => {
+  const found: Array<WalkedLeaf> = [];
+  const push = (path: ReadonlyArray<PropertyKey>, leaf: SchemaIssue.Issue) =>
+    found.push({ path, issue: leaf, formatFrom: leaf });
   const walk = (current: SchemaIssue.Issue, path: ReadonlyArray<PropertyKey>): void => {
     Match.value(current).pipe(
       // `Pointer` extends the path and recurses into its one inner issue.
@@ -96,15 +113,22 @@ export const leaves = (issue: SchemaIssue.Issue): ReadonlyArray<Leaf> => {
       // A union no-match: one leaf per rejected member, so a caller can see
       // which branch failed — or the `AnyOf` itself when it carries none.
       Match.tag("AnyOf", (node) => {
-        if (Array.isReadonlyArrayEmpty(node.issues)) found.push({ path, issue: node });
+        if (Array.isReadonlyArrayEmpty(node.issues)) push(path, node);
         else node.issues.forEach((child) => walk(child, path));
       }),
-      // `Filter` / `Encoding` wrap one inner issue with extra context.
-      Match.tag("Filter", "Encoding", (node) => walk(node.issue, path)),
+      // A `Filter` wrapping a message-less `InvalidValue` is a built-in check
+      // failing: keep the leaf, but format from the filter, which carries the
+      // expectation. Any other `Filter`, and every `Encoding`, just unwraps.
+      Match.tag("Filter", (node) => {
+        if (isBareInvalidValue(node.issue)) {
+          found.push({ path, issue: node.issue, formatFrom: node });
+        } else walk(node.issue, path);
+      }),
+      Match.tag("Encoding", (node) => walk(node.issue, path)),
       // A terminal leaf: `InvalidType`, `InvalidValue`, `MissingKey`,
       // `UnexpectedKey`, `Forbidden`, `OneOf`.
       Match.orElse((leaf) => {
-        found.push({ path, issue: leaf });
+        push(path, leaf);
       }),
     );
   };
@@ -138,7 +162,11 @@ export interface PointedIssue {
   readonly pointer: string;
   /** The leaf's `_tag` (`InvalidType`, `MissingKey`, …): a stable code. */
   readonly tag: SchemaIssue.Issue["_tag"];
-  /** The leaf's message, from Effect's default issue formatter. */
+  /**
+   * The leaf's message, from Effect's default issue formatter — formatted from
+   * the enclosing `Filter` when the leaf is a built-in check's message-less
+   * `InvalidValue`, so the expectation survives.
+   */
   readonly message: string;
   /** The leaf itself. */
   readonly issue: SchemaIssue.Issue;
@@ -160,6 +188,11 @@ export interface PointedIssue {
  * const [first] = Issues.pointers(failure.issue, { prefix: ["data", "attributes"] })
  * console.log(first?.pointer, first?.tag, first?.message)
  * // → /data/attributes/name MissingKey Missing key
+ *
+ * const Short = Schema.Struct({ code: Schema.String.check(Schema.isMinLength(3)) })
+ * const tooShort = Schema.decodeUnknownEffect(Short)({ code: "ab" }).pipe(Effect.flip, Effect.runSync)
+ * console.log(Issues.pointers(tooShort.issue)[0]?.message)
+ * // → Expected a value with a length of at least 3
  * ```
  *
  * @since 0.1.0
@@ -173,10 +206,10 @@ export const pointers = (
   // Effect's default formatter, per leaf: `String(issue)` is not a message
   // for a leaf node (a `MissingKey` stringifies as `[object Object]`).
   const format = SchemaIssue.makeFormatterDefault();
-  return Array.map(leaves(issue), (leaf) => ({
+  return Array.map(walkLeaves(issue), (leaf) => ({
     pointer: pathToJsonPointer([...prefix, ...leaf.path]),
     tag: leaf.issue._tag,
-    message: format(leaf.issue),
+    message: format(leaf.formatFrom),
     issue: leaf.issue,
   }));
 };
