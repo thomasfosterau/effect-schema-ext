@@ -1,0 +1,45 @@
+name: Bug report
+description: A helper decodes, encodes, types or reads something wrong.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill in enough that someone — human or agent — can reproduce and fix this end-to-end without coming back to ask.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What's wrong
+      description: The behaviour, in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: The smallest snippet that shows it — the schema, the input, what you called.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "`@thomasfosterau/effect-schema-ext` and `effect`."
+      placeholder: "effect-schema-ext 0.1.0, effect 4.0.0-rc.115"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true
