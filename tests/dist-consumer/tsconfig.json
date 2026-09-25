@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+    // No `paths`: the package's `exports` point at `dist/` (there is no
+    // `src/` export condition), so the workspace dependency resolves to the
+    // EMITTED declarations exactly as it does for a consumer installing from
+    // npm. `skipLibCheck` stays ON (inherited): an unbound type name in an
+    // emitted `.d.ts` resolves to the error type, i.e. `any`, and every
+    // `Equals<…>` assertion in src/consumer.ts is false against `any`.
+  },
+  "include": ["src"]
+}

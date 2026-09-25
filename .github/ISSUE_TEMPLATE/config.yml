@@ -1,0 +1,11 @@
+# Issue template chooser config. Blank issues stay enabled for the
+# maintainer's quick capture; the forms exist to make agent-grabbable issues
+# the path of least resistance.
+blank_issues_enabled: true
+contact_links:
+  - name: Security policy (read before reporting)
+    url: https://github.com/thomasfosterau/effect-schema-ext/blob/main/SECURITY.md
+    about: Report vulnerabilities privately via a security advisory, not a public issue.
+  - name: How this repo is built
+    url: https://github.com/thomasfosterau/effect-schema-ext/blob/main/CONTRIBUTING.md
+    about: Branch model, pre-PR checklist, and CI expectations.

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "packages/effect-schema-ext/src/index.ts",
+    "packages/effect-schema-ext/src/Ast.ts",
+    "packages/effect-schema-ext/src/Bounded.ts",
+    "packages/effect-schema-ext/src/Ids.ts",
+    "packages/effect-schema-ext/src/Issues.ts",
+    "packages/effect-schema-ext/src/LiteralExact.ts",
+    "packages/effect-schema-ext/src/TriState.ts",
+    "packages/*/tests/**/*.test.ts",
+    "packages/*/tests/**/*.types.ts",
+    "tests/dist-consumer/src/*.ts",
+    "**/vite.config.ts",
+    "vite.package.ts"
+  ],
+  "ignorePatterns": ["**/dist/**", "**/docs/**", "**/coverage/**"],
+  "ignoreDependencies": [
+    "@types/node",
+    "effect-solutions",
+    "@effect/docgen",
+    "@effect/tsgo",
+    "@effect/language-service",
+    "@typescript/native",
+    "typescript",
+    "tsx",
+    "vite",
+    "vitest",
+    "vite-plus",
+    "@changesets/cli",
+    "@changesets/changelog-github",
+    "@vitest/coverage-istanbul",
+    "fallow"
+  ],
+  "rules": {
+    "unused-files": "error",
+    "unused-exports": "error",
+    "unused-types": "error",
+    "unused-dependencies": "error",
+    "unused-dev-dependencies": "warn",
+    "unused-enum-members": "error",
+    "unused-class-members": "warn",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "error",
+    "circular-dependencies": "error",
+    "boundary-violation": "error",
+    "stale-suppressions": "warn"
+  },
+  "boundaries": {
+    "zones": [
+      { "name": "schema-ext", "patterns": ["packages/effect-schema-ext/**"] },
+      { "name": "dist-consumer", "patterns": ["tests/dist-consumer/**"] }
+    ],
+    "rules": [
+      { "from": "schema-ext", "allow": [] },
+      { "from": "dist-consumer", "allow": ["schema-ext"] }
+    ]
+  },
+  "health": {
+    "maxCyclomatic": 20,
+    "maxCognitive": 15,
+    "maxCrap": 30,
+    "coverage": "coverage/coverage-final.json"
+  }
+}

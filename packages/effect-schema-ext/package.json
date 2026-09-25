@@ -1,0 +1,82 @@
+{
+  "$schema": "https://www.schemastore.org/package",
+  "name": "@thomasfosterau/effect-schema-ext",
+  "version": "0.0.0",
+  "description": "Pure Effect Schema helpers: the update tri-state reader, Schema issue → RFC 6901 JSON Pointer walk, bounded pagination and id-list codecs, branded UUID ids and slugs, exact literal-union tuples, and AST / decode-probe introspection.",
+  "keywords": [
+    "effect",
+    "effect-schema",
+    "json-pointer",
+    "pagination",
+    "rfc6901",
+    "schema",
+    "slug",
+    "typescript",
+    "uuid"
+  ],
+  "homepage": "https://github.com/thomasfosterau/effect-schema-ext#readme",
+  "bugs": {
+    "url": "https://github.com/thomasfosterau/effect-schema-ext/issues"
+  },
+  "license": "MIT",
+  "author": "Thomas Foster <me@thomasfoster.au>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfosterau/effect-schema-ext.git",
+    "directory": "packages/effect-schema-ext"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CLAUDE.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./Ast": {
+      "types": "./dist/Ast.d.ts",
+      "default": "./dist/Ast.js"
+    },
+    "./Bounded": {
+      "types": "./dist/Bounded.d.ts",
+      "default": "./dist/Bounded.js"
+    },
+    "./Ids": {
+      "types": "./dist/Ids.d.ts",
+      "default": "./dist/Ids.js"
+    },
+    "./Issues": {
+      "types": "./dist/Issues.d.ts",
+      "default": "./dist/Issues.js"
+    },
+    "./LiteralExact": {
+      "types": "./dist/LiteralExact.d.ts",
+      "default": "./dist/LiteralExact.js"
+    },
+    "./TriState": {
+      "types": "./dist/TriState.d.ts",
+      "default": "./dist/TriState.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@effect/language-service": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:peers"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

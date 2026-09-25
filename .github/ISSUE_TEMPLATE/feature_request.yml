@@ -1,0 +1,37 @@
+name: Feature / enhancement
+description: A new helper, or an improvement to an existing one.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This package holds **pure Effect Schema helpers with no application vocabulary**. If the helper is duplicated in an application, name the copies — they are the behavioural spec and the test corpus.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / outcome
+      description: What should be true that isn't today, and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: spec
+    attributes:
+      label: The behavioural spec
+      description: The application copies (repo, path, line count) and where they diverge, or the upstream behaviour to match.
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] …
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context & links
+    validations:
+      required: false
