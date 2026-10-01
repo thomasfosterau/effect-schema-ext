@@ -180,7 +180,7 @@ export interface SlugOptions {
 export const slug = (options?: SlugOptions): Schema.String => {
   const reserved = HashSet.fromIterable(options?.reserved ?? []);
   return Schema.String.check(
-    Schema.isLengthBetween(1, options?.maxLength ?? DEFAULT_MAX_SLUG_LENGTH),
+    Schema.isBetweenLength(1, options?.maxLength ?? DEFAULT_MAX_SLUG_LENGTH),
     Schema.isPattern(SLUG_PATTERN, { message: SLUG_PATTERN_MESSAGE }),
     Schema.makeFilter(
       (value: string) =>

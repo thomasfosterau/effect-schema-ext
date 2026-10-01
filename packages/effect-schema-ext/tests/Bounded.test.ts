@@ -167,7 +167,7 @@ describe("IdList — the filter[ids] codec", () => {
   });
 
   it("decodes a repeated query key, which UrlParams reports as an array", () => {
-    // `effect/unstable/http`'s `UrlParams.toRecord` maps a key seen once to a
+    // `effect/http`'s `UrlParams.toRecord` maps a key seen once to a
     // string and a repeated key to an array; a schema accepting only one of
     // the two 400s on a perfectly ordinary request.
     expect(decode([A, B])).toEqual([A, B]);
