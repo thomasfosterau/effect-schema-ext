@@ -1,11 +1,10 @@
 /**
- * @copyright Thomas Foster
- *
  * `@thomasfosterau/effect-schema-ext` — the pure Effect Schema helpers the
  * website, gardeneria and preferenceflow applications duplicate. Each module
  * is also its own entry point (`@thomasfosterau/effect-schema-ext/TriState`,
  * …); this barrel re-exports them as namespaces.
  *
+ * @copyright Thomas Foster
  * @since 0.1.0
  */
 

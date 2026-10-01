@@ -1,6 +1,4 @@
 /**
- * @copyright Thomas Foster
- *
  * Exact literal unions: a tuple of literals that is checked, at compile time,
  * to name **every** member of a union type and **nothing else**.
  *
@@ -11,6 +9,7 @@
  * applications write inline catches the missing one. {@link tuple} does both
  * in one call and names the missing members in the error.
  *
+ * @copyright Thomas Foster
  * @since 0.1.0
  */
 

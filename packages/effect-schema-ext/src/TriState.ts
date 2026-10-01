@@ -1,6 +1,4 @@
 /**
- * @copyright Thomas Foster
- *
  * The **update tri-state**: how a partial-update input says, per clearable
  * field, one of three things.
  *
@@ -31,6 +29,7 @@
  * {@link suppliedValue} / {@link suppliedNullOr} fold the two no-value states
  * together on purpose, and are for side effects only.
  *
+ * @copyright Thomas Foster
  * @since 0.1.0
  */
 

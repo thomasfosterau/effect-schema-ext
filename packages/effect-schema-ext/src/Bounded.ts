@@ -1,6 +1,4 @@
 /**
- * @copyright Thomas Foster
- *
  * Bounded numeric and list schemas for list inputs.
  *
  * A list endpoint that takes its window from the caller must bound it in the
@@ -20,6 +18,7 @@
  * effect-jsonapi's `FlatQuery`, whose interim copies move here, so that move
  * is an import change, not an API change.
  *
+ * @copyright Thomas Foster
  * @since 0.1.0
  */
 
