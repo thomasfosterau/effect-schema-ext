@@ -1,6 +1,8 @@
 # @thomasfosterau/effect-schema-ext
 
-Pure [Effect Schema](https://effect.website/) helpers: the update tri-state, Schema issue → JSON Pointer, bounded list inputs, branded ids and slugs, exhaustive literal tuples, and field introspection. Extracted from the `thomasfosterau/website`, `gardeneria` and `preferenceflow` applications.
+Pure [Effect Schema](https://effect.website/) helpers: the update tri-state reader, Schema issue → RFC 6901 JSON Pointer walk, bounded pagination and id-list codecs, branded UUID ids and slugs, exact literal-union tuples, and AST / decode-probe introspection.
+
+## Install
 
 ```sh
 pnpm add @thomasfosterau/effect-schema-ext effect
@@ -46,9 +48,9 @@ TriState.toNullOr(input.summary); // null  — a clear, not a carry-forward
 - `TriState.suppliedValue(field: Option<A> | undefined): Option<A>` — the `Option` encoding.
 - `TriState.suppliedNullOr(field: A | null | undefined): Option<A>` — the nullable encoding.
 
-`readNullOr` and `suppliedNullOr` refuse an `Option` at compile time: an `Option`-encoded field read as a nullable one would turn a clear into an assignment.
-
 Both map "absent" and "clear" to `Option.none()`. Never use them to compute a column value.
+
+`readNullOr` and `suppliedNullOr` refuse an `Option` at compile time: an `Option`-encoded field read as a nullable one would turn a clear into an assignment.
 
 ## Issues
 

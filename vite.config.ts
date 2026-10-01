@@ -1,16 +1,9 @@
 /**
+ * Root workspace config: the repo-wide fmt / lint / staged passes and the root
+ * `check`, `docgen` and `test:coverage` aggregates. Per-package tasks come
+ * from `vite.package.ts`.
+ *
  * @copyright Thomas Foster
- *
- * Root workspace config. Owns the repo-wide format/lint/staged passes (read
- * statically by `vp fmt` / `vp lint` / `vp staged`) and the root `check` /
- * `docgen` aggregates. Every package's own tasks (`check`, `test:unit`,
- * `build`, `docgen`) live in that package's vite.config.ts; this file
- * deliberately compiles nothing, so adding a package never means editing it.
- *
- * Copied from the effect-web library's root config (itself from the
- * effect-drizzle-ext library and, through it, the gardeneria application):
- * every comment that explains a load-bearing decision is part of the standard
- * and travels with the config.
  */
 
 import { defineConfig } from "vite-plus";
@@ -74,6 +67,9 @@ export default defineConfig({
       // applications carry today, which predates the Effect oxlint preset. The
       // rules below sit at `warn` so a port stays committable while each site
       // stays reported; a new site is a defect, not headroom.
+      // Baseline: `vp check` reports 30 warnings at dfd8622; a change that
+      // raises the count adds a defect. Flip a rule to `error` and delete its
+      // line when its count reaches zero.
       "effect/imperative-loops": "warn",
       "effect/avoid-native-object-helpers": "warn",
       "effect/avoid-non-null-assertion": "warn",
@@ -200,7 +196,9 @@ export default defineConfig({
       // per-function CRAP scores (`health.coverage` in .fallowrc.json).
       // Without it fallow estimates every function as uncovered, and any
       // function with cyclomatic complexity ≥ 5 fails the gate on its own.
-      // Run this before `fallow audit` (the commit hook runs the audit).
+      // Run this before `fallow audit` (the Claude Code PreToolUse hook
+      // `.claude/hooks/fallow-gate.sh` runs the audit on `git commit` /
+      // `git push`).
       "test:coverage": {
         command: "vp test run --coverage",
         cache: false,

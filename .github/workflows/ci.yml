@@ -1,12 +1,8 @@
 name: CI
 
-# ONE job, ONE required check: the pipeline's task graph lives in
-# vite.config.ts (the root `check` and `docgen` tasks and every package's
-# `test:unit` / `build`), not in GitHub Actions `needs:`. Copied in shape from
-# the effect-web library (and through it effect-drizzle-ext and the gardeneria
-# application),
-# minus that repo's PostgreSQL service: nothing here needs a database, a
-# stage or a credential, so every PR class runs the whole gate.
+# One job, one required check: the task graph lives in vite.config.ts, not in
+# `needs:`. Nothing here needs a database, a stage or a credential, so every
+# PR runs the whole gate.
 
 on:
   pull_request:

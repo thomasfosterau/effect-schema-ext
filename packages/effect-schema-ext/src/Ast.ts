@@ -1,6 +1,4 @@
 /**
- * @copyright Thomas Foster
- *
  * Schema introspection by AST and by **behavioural decode probe**.
  *
  * Code that derives something from a model — a row mapper, a column map, a
@@ -18,6 +16,11 @@
  * call: this is start-up introspection over a model, not a hot path — cache
  * the result, not the probe.
  *
+ * A schema that accepts any input (`Schema.Unknown`) reports `acceptsNull` and
+ * `isArray`, since it decodes `null` and `[]`. A schema whose decoding needs
+ * services is not supported.
+ *
+ * @copyright Thomas Foster
  * @since 0.1.0
  */
 
@@ -81,6 +84,7 @@ export const acceptsNull = (schema: Schema.Constraint): boolean =>
 
 /**
  * Whether the schema accepts an empty list on the wire — a list-valued field.
+ * A schema that rejects the empty list (a non-empty array) reports `false`.
  *
  * @example
  * ```ts

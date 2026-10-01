@@ -1,6 +1,4 @@
 /**
- * @copyright Thomas Foster
- *
  * Effect Schema issue trees → RFC 6901 JSON Pointers.
  *
  * A failed decode reports a tree of `SchemaIssue`s: `Pointer` nodes carry the
@@ -13,6 +11,7 @@
  * The response envelope (a JSON:API error object, a form error map) is the
  * caller's.
  *
+ * @copyright Thomas Foster
  * @since 0.1.0
  */
 

@@ -1,6 +1,4 @@
 /**
- * @copyright Thomas Foster
- *
  * Identifier schemas: the UUID string, the branded-UUID id pattern, and the
  * URL-safe slug.
  *
@@ -22,6 +20,7 @@
  * behaviour of effect-jsonapi's `FlatQuery`, whose interim copies move here,
  * so that move is an import change, not an API change.
  *
+ * @copyright Thomas Foster
  * @since 0.1.0
  */
 
@@ -61,8 +60,9 @@ export type Uuid = typeof Uuid.Type;
  * `Type` is `string & Brand<name>`; the `Encoded` side stays `string`.
  *
  * Brand a trusted value (a database row's id) with the schema's `make`
- * (`PersonId.make(row.id)`) — nominal, not a re-validation; decode an
- * untrusted one through the schema.
+ * (`PersonId.make(row.id)`): it re-runs the UUID check and throws on
+ * failure; pass `{ disableChecks: true }` to skip it. Decode an untrusted
+ * value through the schema.
  *
  * @example
  * ```ts
@@ -88,7 +88,7 @@ export const make = <const B extends string>(brand: B): Schema.brand<Schema.Stri
 /**
  * A child id: `parent` with one more brand stacked on. The result is
  * assignable wherever `parent`'s type is expected (a `PersonId` is an
- * `AgentId`), but not the other way round — the polymorphic seams of an
+ * `EntityId`), but not the other way round — the polymorphic seams of an
  * ontology ask for the brand at the level they accept.
  *
  * @example
