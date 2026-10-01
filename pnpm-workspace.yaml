@@ -36,7 +36,7 @@ catalog:
   # of the 6/7 split. `effect-tsgo patch` overwrites the native `tsc` binary
   # with an Effect-patched build matched by gitHead, so this pins in lockstep
   # with `@typescript/native` below and with the `oxlint` that `vite-plus`
-  # pulls in: 0.45.0 supports typescript 7.0.2 and oxlint 1.81.0 / 1.82.0, and
+  # pulls in: 0.46.1 supports typescript 7.0.2 and oxlint 1.82.0 - 1.85.0, and
   # hard-errors (UnsupportedTargetPackageVersionError) on anything else —
   # failing `pnpm install` itself in the `prepare` script. Read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
@@ -45,7 +45,7 @@ catalog:
   "@mpsuesser/oxlint-plugin-effect": ^0.5.0
   "@types/node": ^26.6.3
   # Must match `vitest` below (its peer is the exact vitest version).
-  "@vitest/coverage-istanbul": 5.0.2
+  "@vitest/coverage-istanbul": 5.0.1
   effect: 4.0.0-rc.118
   effect-solutions: ^0.5.3
   fallow: 3.30.0
@@ -61,14 +61,13 @@ catalog:
   "@typescript/native": "npm:typescript@7.0.2"
   # vite-plus pins `oxlint`, `oxfmt` and `vitest` to exact versions, so this
   # entry decides the oxlint `effect-tsgo patch --oxlint` has to support (see
-  # the @effect/tsgo note above): 0.3.0 carries oxlint 1.79.0, 0.3.1 carries
-  # 1.81.0, 0.3.2 carries 1.82.0. `vite` is the same release under its aliased
-  # core package, and `vitest` must match vite-plus's exact pin (0.3.2 →
-  # 4.1.11) because the `vitest: "catalog:"` override forces every resolution
-  # to the catalog singleton.
-  vite-plus: 0.3.2
-  vite: npm:@voidzero-dev/vite-plus-core@0.3.2
-  vitest: 4.1.11
+  # the @effect/tsgo note above): 1.0.0 carries oxlint 1.85.0. `vite` is the
+  # same release under its aliased core package, and `vitest` must match
+  # vite-plus's exact pin (1.0.0 -> 5.0.1) because the `vitest: "catalog:"`
+  # override forces every resolution to the catalog singleton.
+  vite-plus: 1.0.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.0.0
+  vitest: 5.0.1
 
 # Peer ranges the PUBLISHED package declares. Kept as a named catalog so the
 # strict catalog mode still governs them while they stay ranges (an exact

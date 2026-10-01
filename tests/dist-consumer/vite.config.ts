@@ -9,12 +9,14 @@ export default defineConfig({
       check: {
         command: "tsc -p tsconfig.json",
         dependsOn: [{ task: "build", from: "dependencies" }],
-        input: [
-          { auto: true },
-          "!node_modules/**",
-          { pattern: "packages/*/dist/**", base: "workspace" as const },
-        ],
-        output: [],
+        cache: {
+          input: [
+            { auto: true },
+            "!node_modules/**",
+            { pattern: "packages/*/dist/**", base: "workspace" as const },
+          ],
+          output: [],
+        },
       },
     },
   },
