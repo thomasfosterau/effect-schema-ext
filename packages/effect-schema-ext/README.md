@@ -6,7 +6,7 @@ Pure [Effect Schema](https://effect.website/) helpers: the update tri-state, Sch
 pnpm add @thomasfosterau/effect-schema-ext effect
 ```
 
-Peer: `effect` `>=4.0.0-rc.112`. ESM only; every module is also its own entry point:
+Peer: `effect` `>=4.0.0-rc.118`. ESM only; every module is also its own entry point:
 
 ```ts
 import { TriState } from "@thomasfosterau/effect-schema-ext";

@@ -31,7 +31,7 @@ catalog:
   # below, which pnpm tolerates via `peerDependencyRules`; the JS API it uses
   # is unchanged in 6.
   "@effect/docgen": ^0.5.2
-  "@effect/language-service": ^0.87.2
+  "@effect/language-service": ^0.87.3
   # Effect Language Service as a native (TypeScript-Go) binary — the TS7 side
   # of the 6/7 split. `effect-tsgo patch` overwrites the native `tsc` binary
   # with an Effect-patched build matched by gitHead, so this pins in lockstep
@@ -46,7 +46,7 @@ catalog:
   "@types/node": ^26.6.3
   # Must match `vitest` below (its peer is the exact vitest version).
   "@vitest/coverage-istanbul": 5.0.2
-  effect: 4.0.0-rc.117
+  effect: 4.0.0-rc.118
   effect-solutions: ^0.5.3
   fallow: 3.30.0
   # `@effect/docgen` runs each example under tsx.
@@ -75,10 +75,10 @@ catalog:
 # `4.0.0-rc.115` peer would reject a consumer on rc.116). `pnpm pack` replaces
 # `catalog:peers` with these ranges in the published manifest (see
 # scripts/release.sh). The floor is the oldest `effect` the package has been
-# type-checked and tested against — website and gardeneria still pin rc.112.
+# type-checked and tested against (rc.118, the line the whole programme moved to in website#2015).
 catalogs:
   peers:
-    effect: ">=4.0.0-rc.112"
+    effect: ">=4.0.0-rc.118"
 
 overrides:
   vite: "catalog:"
@@ -86,10 +86,19 @@ overrides:
   # `effect` MUST be a singleton (see the header): force every resolution to
   # the catalog version so a hoisting reshuffle cannot introduce a second copy.
   effect: "catalog:"
+  # @mpsuesser/oxlint-plugin-effect@0.5.0 depends on effect 4.0.0-beta.100 and calls
+  # `Schema.isIncludes` at load, which rc.118 renamed to `isIncluding`; forced onto the
+  # singleton rc.118 it throws and `vite.config.ts` cannot load. This gives the lint
+  # plugin its own private copy. Remove once the plugin ships a release built on
+  # effect rc.118 or later (owner-approved, thomasfosterau/effect-schema-ext#11).
+  "@mpsuesser/oxlint-plugin-effect>effect": "4.0.0-beta.100"
 nodeLinker: hoisted
 allowBuilds:
   esbuild: true
   fallow: true
+  # Only reached through the lint plugin's private effect beta copy (see the override
+  # above); msgpackr falls back to pure JS without the native addon.
+  msgpackr-extract: false
 peerDependencyRules:
   allowAny:
     - vite

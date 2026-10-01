@@ -2,7 +2,7 @@
 "@thomasfosterau/effect-schema-ext": minor
 ---
 
-Initial release: the pure Effect Schema helpers the website, gardeneria and preferenceflow applications duplicate. Peer: `effect` `>=4.0.0-rc.112`. Every module is its own entry point and a namespace on `.`.
+Initial release: the pure Effect Schema helpers the website, gardeneria and preferenceflow applications duplicate. Peer: `effect` `>=4.0.0-rc.118`. Every module is its own entry point and a namespace on `.`.
 
 - `TriState` — the update tri-state (absent = carry forward, `null` = clear, value = set) in both encodings: `clearable` (`optionalKey(OptionFromNullOr(X))`) and `clearableNullOr` (`optional(NullOr(X))`); the separating readers `read` / `readNullOr` / `match` / `toNullOr` / `toNullOrFields` for write paths; the folding readers `suppliedValue` / `suppliedNullOr` for side effects.
 - `Issues` — `pathToJsonPointer` (RFC 6901), `leaves` (a `SchemaIssue` tree flattened with its paths) and `pointers` (each leaf as a pointer, tag and formatted message, under a caller-chosen prefix).

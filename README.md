@@ -11,7 +11,7 @@
 | [`LiteralExact`](packages/effect-schema-ext/README.md#literalexact) | Literal tuples checked at compile time to cover a union exactly. |
 | [`Ast`](packages/effect-schema-ext/README.md#ast) | Field introspection by AST and behavioural decode probe (optional / nullable / array / date). |
 
-Built against `effect@4.0.0-rc` (peer `>=4.0.0-rc.112`), published as ESM with declarations, `sideEffects: false`.
+Built against `effect@4.0.0-rc` (peer `>=4.0.0-rc.118`), published as ESM with declarations, `sideEffects: false`.
 
 **Disclaimer:** this repository and its package have been created using Claude Code. The API is in flux; expect churn and breaking changes.
 

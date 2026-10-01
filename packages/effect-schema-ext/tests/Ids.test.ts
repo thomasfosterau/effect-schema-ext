@@ -139,8 +139,8 @@ describe("FlatQuery parity", () => {
     expect(Schema.is(Ids.slug())("a".repeat(201))).toBe(false);
   });
 
-  it("reports the length bound with isLengthBetween's wire message", () => {
-    // FlatQuery.slug checks `Schema.isLengthBetween(1, maxLength)`; the message
+  it("reports the length bound with isBetweenLength's wire message", () => {
+    // FlatQuery.slug checks `Schema.isBetweenLength(1, maxLength)`; the message
     // a client sees for an over-long or empty slug must be the same.
     const expected = /Expected a value with a length between 1 and 200/;
     expect(() => Schema.decodeUnknownSync(Ids.Slug)("a".repeat(201))).toThrow(expected);

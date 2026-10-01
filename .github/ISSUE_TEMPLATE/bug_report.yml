@@ -33,7 +33,7 @@ body:
     attributes:
       label: Versions
       description: "`@thomasfosterau/effect-schema-ext` and `effect`."
-      placeholder: "effect-schema-ext 0.1.0, effect 4.0.0-rc.115"
+      placeholder: "effect-schema-ext 0.1.0, effect 4.0.0-rc.118"
     validations:
       required: true
   - type: checkboxes

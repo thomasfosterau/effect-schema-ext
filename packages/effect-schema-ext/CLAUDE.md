@@ -16,7 +16,7 @@ The pure Effect Schema helpers the three applications duplicate. Peer: `effect` 
 - **The wire is unchanged by the field schemas.** Encoding a decoded tri-state payload reproduces the JSON it came from: an absent key stays absent, `null` stays `null`.
 - **FlatQuery parity.** `PageOffset`, `pageLimit`, `pagination` (+ `PaginationOptions`, `DefaultedPagination`, `RequiredPagination`), `idList` / `IdList` / `DEFAULT_MAX_ID_LIST`, `Uuid`, `SLUG_PATTERN`, `slug` / `Slug` and `suppliedValue` keep effect-jsonapi `FlatQuery`'s names, signatures, defaults and messages: its `src/internal/schemaExt.ts` moves here "as an import change, not an API change". Additions are fine (`idList`'s `dedupe` option, off by default); a changed default or message is a break for that move. The `FlatQuery parity` test blocks pin it.
 - **Bounds apply to input as sent.** `IdList` counts ids before de-duplication, so repeats cannot pad a request past the bound; the decoded side keeps the bound too.
-- **Probes decode through `Schema.toCodecJson`**, the wire reading (`Schema.Date`'s own decoder accepts only a `Date` instance on effect rc.115).
+- **Probes decode through `Schema.toCodecJson`**, the wire reading (`Schema.Date`'s own decoder accepts only a `Date` instance on effect rc.115 and later).
 - **Every export has `@since`, `@category` and a runnable `@example`** whose `// →` comments match what it prints.
 
 ## Boundary
