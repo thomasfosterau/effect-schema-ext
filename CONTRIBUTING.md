@@ -4,7 +4,7 @@ Maintained by Thomas Foster, with a workflow meant to be approachable for both h
 
 ## Branch model
 
-`main` plus short-lived feature branches, PR against `main`, squash-merge with a conventional prefix (`feat:`, `fix:`, `docs:`, `chore:`). Rebase onto `origin/main` before opening a PR; never merge `main` into a feature branch (GitHub's "Update branch" button does a merge — avoid it).
+See [AGENTS.md § Branches and pull requests](AGENTS.md#branches-and-pull-requests).
 
 ## Git hooks
 
@@ -12,19 +12,13 @@ Hooks are managed by Vite+; the editable [.vite-hooks/pre-commit](.vite-hooks/pr
 
 ## CI expectations
 
-[ci.yml](.github/workflows/ci.yml) runs one job: `vp check` (format + lint), `vp run check` (the package's `src` type gate, its type-level tests, and the dist-consumer check against the emitted declarations), `vp run -r test:unit`, `vp run -r build`, `vp run docgen` (every JSDoc `@example` compiled and executed against `dist/`), `pnpm audit --audit-level high`. [release.yml](.github/workflows/release.yml) runs changesets/action on `main`: it opens the version PR while unreleased changesets exist and publishes once it merges, via npm OIDC trusted publishing (see [PUBLISHING.md](PUBLISHING.md)). [effect-canary.yml](.github/workflows/effect-canary.yml) re-runs the type, test, build and docgen gates weekly against `effect@rc` and files an issue when they go red.
+CI ([ci.yml](.github/workflows/ci.yml)) runs the same gates as [AGENTS.md § Verification](AGENTS.md#verification), plus `pnpm audit --audit-level high`. [release.yml](.github/workflows/release.yml) runs changesets/action on `main` (see [PUBLISHING.md](PUBLISHING.md)). [effect-canary.yml](.github/workflows/effect-canary.yml) re-runs the type, test, build and docgen gates weekly against `effect@rc` and files an issue when they go red.
 
 ## Pre-PR checklist
 
-1. `vp check`
-2. `vp run check`
-3. `vp run -r test:unit`
-4. `vp run -r build`
-5. `vp run docgen`
-6. `vp run test:coverage`, then `fallow audit --base origin/main` (the coverage map is what makes fallow's CRAP scores real)
-7. A changeset (`pnpm changeset`) for every change to the published package.
-8. `git fetch origin main && git rebase origin/main`
-9. Docs: the package `README.md` for any exported change; the package `CLAUDE.md` for a new term or invariant.
+1. The gates in [AGENTS.md § Verification](AGENTS.md#verification), in order.
+2. `git fetch origin main && git rebase origin/main`
+3. Docs: the package `README.md` for any exported change; the package `CLAUDE.md` for a new term or invariant.
 
 ## Running individual checks
 

@@ -4,7 +4,7 @@ Describe what changed and why. If this closes an issue, add `Closes #N` so it au
 
 ## Validation
 
-Tick what you ran. Pre-commit covers format + lint; there is no pre-push hook.
+Tick what you ran, in the order of [AGENTS.md § Verification](../AGENTS.md#verification), and quote each command's final pass/fail. Pre-commit covers format + lint; there is no pre-push hook.
 
 - [ ] `vp check` (`vp fmt --check` + `vp lint`)
 - [ ] `vp run check` (the package's `src` + type-level tests, plus the dist-consumer check against the emitted declarations)
