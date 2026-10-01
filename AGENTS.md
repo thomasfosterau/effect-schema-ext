@@ -43,7 +43,7 @@ Before you report work as done, run the gates below in order and quote each comm
 4. `vp run -r test:unit`
 5. `vp run -r build`
 6. `vp run docgen`
-7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent` — without the coverage map fallow scores every function as uncovered, and any function with cyclomatic complexity ≥ 5 fails the audit on its own. Fallow's config here is `.fallowrc.json`.
+7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent` — without the coverage map fallow scores every function as uncovered, and any function with cyclomatic complexity ≥ 5 fails the audit on its own. Fallow's config here is `.fallowrc.json`, not the `fallow.toml` the generated block below names (#20).
 8. A changeset for every change to the published package's behaviour.
 
 ## Branches and pull requests
@@ -76,7 +76,7 @@ This package has no error channel of its own: helpers are schemas and pure funct
 
 ## Agent sessions
 
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `vp` and `fallow` on PATH for non-interactive shells. It hydrates no secrets; nothing here needs one, and nothing here can publish. Two more hooks run in a session: every Write/Edit is followed by `vp fmt --write` on that file, and a Bash `git commit` / `git push` first runs `fallow audit` (`.claude/hooks/fallow-gate.sh`), which blocks on a `fail` verdict.
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `vp` and `fallow` on PATH for non-interactive shells. It hydrates no secrets; nothing here needs one, and nothing here can publish. Two more hooks run in a session: every Write/Edit/MultiEdit of a `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.css`/`.json`/`.md` file is followed by `vp fmt --write` on that file, and a Bash `git commit` / `git push` first runs `fallow audit` (`.claude/hooks/fallow-gate.sh`), which blocks on a `fail` verdict.
 
 ## Documentation surfaces
 

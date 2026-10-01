@@ -22,15 +22,11 @@ CI ([ci.yml](.github/workflows/ci.yml)) runs the same gates as [AGENTS.md § Ver
 
 ## Running individual checks
 
+The gates themselves, in order, are in [AGENTS.md § Verification](AGENTS.md#verification). Narrower commands for iterating:
+
 ```sh
-vp lint                                              # oxlint
-vp fmt                                               # oxfmt
-vp run check                                         # the whole type gate (builds dist/ for the dist-consumer check)
+vp lint                                              # oxlint only
+vp fmt                                               # oxfmt, writing fixes
 vp run --filter ./packages/effect-schema-ext check   # the package's own type gate
-vp run -r test:unit                                  # unit tests
 vp test run tests/TriState.test.ts                   # single file (from inside the package)
-vp run -r build                                      # emit dist/
-vp run test:coverage                                 # one Istanbul map for fallow
-vp run docgen                                        # examples + API reference
-vp run fallow:audit                                  # change-set review (not a CI gate)
 ```
