@@ -56,6 +56,18 @@ export const Uuid: Schema.String = Schema.String.check(Schema.isUUID());
 export type Uuid = typeof Uuid.Type;
 
 /**
+ * `Schema.brand` (effect 4.0.0) only accepts an identifier it can prove is a
+ * single concrete key (`B & EnsureSingleBrandKey<B>`), which a generic `B`
+ * cannot. The caller's `const B extends string` is a single literal at every
+ * call site, so assert the parameter type `brand<B>` expects, with no `any`
+ * and no change to the public signatures.
+ */
+const asBrandKey = <B extends string>(identifier: B): Parameters<typeof Schema.brand<B>>[0] =>
+  // SAFETY: `B & EnsureSingleBrandKey<B>` is `B` narrowed by a type-level check that every
+  // call site satisfies (`const B` infers a single string literal); only the generic body can't prove it.
+  identifier as Parameters<typeof Schema.brand<B>>[0];
+
+/**
  * A branded UUID id: {@link Uuid} piped through `Schema.brand(name)`. The
  * `Type` is `string & Brand<name>`; the `Encoded` side stays `string`.
  *
@@ -83,7 +95,7 @@ export type Uuid = typeof Uuid.Type;
  * @category constructors
  */
 export const make = <const B extends string>(brand: B): Schema.brand<Schema.String, B> =>
-  Uuid.pipe(Schema.brand(brand));
+  Uuid.pipe(Schema.brand<B>(asBrandKey<B>(brand)));
 
 /**
  * A child id: `parent` with one more brand stacked on. The result is
@@ -110,7 +122,7 @@ export const make = <const B extends string>(brand: B): Schema.brand<Schema.Stri
 export const refine = <S extends Schema.ConstraintRebuildable, const B extends string>(
   parent: S,
   brand: B,
-): Schema.brand<S["Rebuild"], B> => Schema.brand(brand)(parent);
+): Schema.brand<S["Rebuild"], B> => Schema.brand<B>(asBrandKey<B>(brand))(parent);
 
 /**
  * Lowercase kebab-case: letters and digits in segments joined by single
