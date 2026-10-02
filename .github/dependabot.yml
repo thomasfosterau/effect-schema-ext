@@ -5,6 +5,19 @@
 # line is a lockstep-versioned singleton set; the vitest toolchain is pinned to
 # vite-plus's exact versions.
 #
+# `@effect/tsgo`, `typescript` (the TS6 alias) and `@typescript/native` (TS7)
+# are one more set: `effect-tsgo patch` matches the native `tsc` and the
+# `oxlint` vite-plus pulls in by gitHead / version and hard-errors
+# (UnsupportedTargetPackageVersionError) on any pairing it has no artifact
+# for, so a Dependabot PR that moves one of them alone goes red. They move by
+# hand, together with `vite-plus`, after reading the `components` table in
+# node_modules/@effect/tsgo/dist/effect-tsgo.cjs (see pnpm-workspace.yaml).
+# Their *version* updates are ignored below while SECURITY updates stay
+# enabled: each ignore is scoped to the `version-update:semver-*` update
+# types, because a bare `dependency-name` ignore would block security updates
+# too. `@effect/tsgo` is also excluded from the `effect` group, whose
+# `@effect/*` pattern would otherwise match it.
+#
 # `cooldown` mirrors pnpm-workspace.yaml's `minimumReleaseAge`.
 version: 2
 updates:
@@ -28,12 +41,37 @@ updates:
         patterns:
           - "effect"
           - "@effect/*"
+        exclude-patterns:
+          - "@effect/tsgo"
       vitest-toolchain:
         patterns:
           - "vitest"
           - "@vitest/coverage-istanbul"
           - "vite-plus"
     ignore:
+      # The TypeScript 6/7 pair and @effect/tsgo: version updates move by hand
+      # as a set with vite-plus (see the header); security updates stay on.
+      - dependency-name: "@effect/tsgo"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "typescript"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "@typescript/native"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
       # `vite` is vite-plus's aliased core package and `vitest` must match
       # vite-plus's exact pin, so the trio only ever moves together, by hand.
       # `@vitest/coverage-istanbul` has an exact peer on `vitest`, so it rides
