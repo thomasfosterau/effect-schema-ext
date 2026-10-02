@@ -56,16 +56,13 @@ export const Uuid: Schema.String = Schema.String.check(Schema.isUUID());
 export type Uuid = typeof Uuid.Type;
 
 /**
- * `Schema.brand` (effect 4.0.0) only accepts an identifier it can prove is a
- * single concrete key (`B & EnsureSingleBrandKey<B>`), which a generic `B`
- * cannot. The caller's `const B extends string` is a single literal at every
- * call site, so assert the parameter type `brand<B>` expects, with no `any`
- * and no change to the public signatures.
+ * The brand identifier parameter of `Schema.brand<B>` (effect 4.0.0): `B`
+ * itself when it is one concrete string literal, and unsatisfiable otherwise. Taking
+ * it as our own parameter type keeps 4.0.0's single-brand-key guard at the
+ * public boundary, so a union or plain `string` is rejected here exactly as
+ * it is by `Schema.brand`.
  */
-const asBrandKey = <B extends string>(identifier: B): Parameters<typeof Schema.brand<B>>[0] =>
-  // SAFETY: `B & EnsureSingleBrandKey<B>` is `B` narrowed by a type-level check that every
-  // call site satisfies (`const B` infers a single string literal); only the generic body can't prove it.
-  identifier as Parameters<typeof Schema.brand<B>>[0];
+type Key<B extends string> = Parameters<typeof Schema.brand<B>>[0];
 
 /**
  * A branded UUID id: {@link Uuid} piped through `Schema.brand(name)`. The
@@ -94,8 +91,8 @@ const asBrandKey = <B extends string>(identifier: B): Parameters<typeof Schema.b
  * @since 0.1.0
  * @category constructors
  */
-export const make = <const B extends string>(brand: B): Schema.brand<Schema.String, B> =>
-  Uuid.pipe(Schema.brand<B>(asBrandKey<B>(brand)));
+export const make = <const B extends string>(brand: Key<B>): Schema.brand<Schema.String, B> =>
+  Uuid.pipe(Schema.brand<B>(brand));
 
 /**
  * A child id: `parent` with one more brand stacked on. The result is
@@ -121,8 +118,8 @@ export const make = <const B extends string>(brand: B): Schema.brand<Schema.Stri
  */
 export const refine = <S extends Schema.ConstraintRebuildable, const B extends string>(
   parent: S,
-  brand: B,
-): Schema.brand<S["Rebuild"], B> => Schema.brand<B>(asBrandKey<B>(brand))(parent);
+  brand: Key<B>,
+): Schema.brand<S["Rebuild"], B> => Schema.brand<B>(brand)(parent);
 
 /**
  * Lowercase kebab-case: letters and digits in segments joined by single

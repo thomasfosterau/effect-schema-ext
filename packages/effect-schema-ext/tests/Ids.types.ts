@@ -10,6 +10,7 @@
  * @module tests/Ids.types
  */
 
+import { Schema } from "effect";
 import { Ids } from "@thomasfosterau/effect-schema-ext";
 
 type Assert<T extends true> = T;
@@ -41,7 +42,26 @@ export const entityAsPerson: PersonId = entity;
 // An id is still a string wherever a string is wanted.
 export const idAsString: string = person;
 
+// Literal identifiers infer `B` exactly…
+export const literalId = Ids.make("LiteralId");
+export const literalChild = Ids.refine(EntityId, "LiteralChild");
+
+declare const union: "A" | "B";
+declare const wide: string;
+
+// …but, as with effect 4.0.0's `Schema.brand`, a union or a plain string is
+// not a single concrete brand key.
+// @ts-expect-error -- a union identifier is not one brand key
+export const unionMake = Ids.make(union);
+// @ts-expect-error -- a plain string identifier is not one brand key
+export const wideMake = Ids.make(wide);
+// @ts-expect-error -- a union identifier is not one brand key
+export const unionRefine = Ids.refine(EntityId, union);
+// @ts-expect-error -- a plain string identifier is not one brand key
+export const wideRefine = Ids.refine(EntityId, wide);
+
 export type Checks = [
+  Assert<Equals<typeof literalId, Schema.brand<Schema.String, "LiteralId">>>,
   Assert<Equals<typeof PersonId.Encoded, string>>,
   Assert<Equals<typeof Ids.Uuid.Type, string>>,
   Assert<Equals<typeof Ids.Slug.Type, string>>,
