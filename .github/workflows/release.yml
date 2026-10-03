@@ -1,7 +1,7 @@
 name: Release
 
 # Changesets release flow, copied from the effect-email library (itself from
-# effect-jsonapi): on every push to `main`, changesets/action either
+# effect-jsonapi): on every push to `trunk`, changesets/action either
 # opens/updates the "Version Packages" PR (when unreleased changesets exist)
 # or, when that PR has merged and no changesets remain, publishes every
 # package under packages/* to npm via OIDC trusted publishing and tags the
@@ -10,7 +10,7 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    branches: [trunk]
 
 concurrency:
   group: release-${{ github.ref }}
@@ -42,7 +42,7 @@ jobs:
       # `effect-tsgo patch`) and every `allowBuilds` dependency's build script
       # inside this job, which holds `id-token: write`. It triggers whenever
       # a manifest's mtime moves after the install step, e.g. when the
-      # Changesets action checks out an existing `changeset-release/main`
+      # Changesets action checks out an existing `changeset-release/trunk`
       # and `git reset --hard`s it back before `pnpm run version`. The top-level
       # `pnpm run` calls are the entry points: commands nested inside a
       # `pnpm run` script (scripts/release.sh's `pnpm exec changeset tag`)
