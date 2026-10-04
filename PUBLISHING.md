@@ -5,7 +5,7 @@ Releases are automated with [Changesets](https://github.com/changesets/changeset
 ## The release flow
 
 1. **Add a changeset with your change.** Run `pnpm changeset`, pick the bump (`patch` / `minor` / `major`) and write a user-facing summary, then commit the generated file alongside your change. (Changes that don't affect the published package — docs, CI, examples — need no changeset.)
-2. **Merge to `main`.** The [`release`](./.github/workflows/release.yml) workflow runs and, while changesets are pending, opens or updates a **"Version Packages"** PR that applies the version bump and rolls the changesets into `CHANGELOG.md`.
+2. **Merge to `trunk`.** The [`release`](./.github/workflows/release.yml) workflow runs and, while changesets are pending, opens or updates a **"Version Packages"** PR that applies the version bump and rolls the changesets into `CHANGELOG.md`.
 3. **Merge the "Version Packages" PR.** With no changesets left, the workflow publishes the new version to npm via the npm CLI and trusted publishing, then tags the commit and creates the GitHub release.
 
 The version step (`pnpm run version`) runs `changeset version`, then `vp fmt`, then `pnpm install --lockfile-only`. Changesets v3 formats the changelogs it writes with whatever formatter it detects, and it detects the `oxfmt` shim that Vite+ installs; that shim only serves editors and exits non-zero when run directly. So `.changeset/config.json` sets `"format": false` and the script formats with `vp fmt` itself.
@@ -17,7 +17,7 @@ The version step (`pnpm run version`) runs `changeset version`, then `vp fmt`, t
 `@thomasfosterau/effect-schema-ext` has not been published yet. npm's trusted-publisher binding is configured per package on npmjs.com, which needs the package to exist — so the first release is a one-off owner action (a manual `npm publish` of the `pnpm pack` tarball from a machine with an npm session, or a classic token used once and then revoked), after which the following steps make the automated flow work end-to-end:
 
 1. **Allow Actions to open the Version Packages PR.** In the repo: **Settings → Actions → General → Workflow permissions** → enable **"Allow GitHub Actions to create and approve pull requests"**. Without this the built-in `GITHUB_TOKEN` is forbidden from opening pull requests and the workflow fails at the PR-creation step — even though the job already grants `pull-requests: write`.
-2. **Create and protect the `release` environment.** **Settings → Environments → New environment → `release`** → enable **Required reviewers** (yourself) and restrict deployment to the `main` branch, so publishing pauses for manual approval. The Release workflow names this environment; until it exists the job cannot run.
+2. **Create and protect the `release` environment.** **Settings → Environments → New environment → `release`** → enable **Required reviewers** (yourself) and restrict deployment to the `trunk` branch, so publishing pauses for manual approval. The Release workflow names this environment; until it exists the job cannot run.
 3. **Configure the trusted publisher.** On npmjs.com, open `@thomasfosterau/effect-schema-ext` → **Settings → Trusted Publisher** and add:
    - Provider: **GitHub Actions**
    - Repository: `thomasfosterau/effect-schema-ext`
@@ -26,4 +26,4 @@ The version step (`pnpm run version`) runs `changeset version`, then `vp fmt`, t
 
    Then remove any classic automation token for the package.
 
-4. **Protect `main`.** Require pull requests and passing CI before merge, and disallow direct pushes, so a release can only be triggered by merging the reviewed "Version Packages" PR.
+4. **Protect `trunk`.** Require pull requests and passing CI before merge, and disallow direct pushes, so a release can only be triggered by merging the reviewed "Version Packages" PR.

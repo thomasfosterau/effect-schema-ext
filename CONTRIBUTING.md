@@ -12,12 +12,12 @@ Hooks are managed by Vite+; the editable [.vite-hooks/pre-commit](.vite-hooks/pr
 
 ## CI expectations
 
-CI ([ci.yml](.github/workflows/ci.yml)) runs the same gates as [AGENTS.md § Verification](AGENTS.md#verification), plus `pnpm audit --audit-level high`. [release.yml](.github/workflows/release.yml) runs changesets/action on `main` (see [PUBLISHING.md](PUBLISHING.md)).
+CI ([ci.yml](.github/workflows/ci.yml)) runs the same gates as [AGENTS.md § Verification](AGENTS.md#verification), plus `pnpm audit --audit-level high`. [release.yml](.github/workflows/release.yml) runs changesets/action on `trunk` (see [PUBLISHING.md](PUBLISHING.md)).
 
 ## Pre-PR checklist
 
 1. The gates in [AGENTS.md § Verification](AGENTS.md#verification), in order.
-2. `git fetch origin main && git rebase origin/main`
+2. `git fetch origin trunk && git rebase origin/trunk`
 3. Docs: the package `README.md` for any exported change; the package `CLAUDE.md` for a new term or invariant.
 
 ## Running individual checks

@@ -1,6 +1,6 @@
 ## Summary
 
-Describe what changed and why. If this closes an issue, add `Closes #N` so it auto-closes on merge to `main`. For an extraction PR, list which SOURCE APP files (website / gardeneria / preferenceflow) the package supersedes — the apps' adoption issues delete them.
+Describe what changed and why. If this closes an issue, add `Closes #N` so it auto-closes on merge to `trunk`. For an extraction PR, list which SOURCE APP files (website / gardeneria / preferenceflow) the package supersedes — the apps' adoption issues delete them.
 
 ## Verification
 

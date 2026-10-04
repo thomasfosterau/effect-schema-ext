@@ -48,13 +48,13 @@ Before you report work as done, run the gates below in order and quote each comm
 
 ## Branches and pull requests
 
-Branch off `main`; PR against `main`; squash-merge with a conventional prefix (`feat:`, `fix:`, `docs:`, `chore:`). Rebase onto `origin/main` before opening or updating a PR; never merge `main` into your branch (GitHub's Update-branch button merges). Agent work uses git worktrees under `.claude/worktrees/`, one per branch, named `issue-<n>-<slug>` for issue-linked work; start every command that targets a worktree with an explicit `cd` and confirm with `git log -1` before committing. The linked `vp` at `~/.local/bin/vp` re-execs the nearest project-local `node_modules/vite-plus/bin/vp`, so a worktree needs its own `pnpm install` first.
+Branch off `trunk`; PR against `trunk`; squash-merge with a conventional prefix (`feat:`, `fix:`, `docs:`, `chore:`). Rebase onto `origin/trunk` before opening or updating a PR; never merge `trunk` into your branch (GitHub's Update-branch button merges). Agent work uses git worktrees under `.claude/worktrees/`, one per branch, named `issue-<n>-<slug>` for issue-linked work; start every command that targets a worktree with an explicit `cd` and confirm with `git log -1` before committing. The linked `vp` at `~/.local/bin/vp` re-execs the nearest project-local `node_modules/vite-plus/bin/vp`, so a worktree needs its own `pnpm install` first.
 
 Every change to a published package's behaviour carries a changeset (`pnpm changeset`); docs-, CI- and tooling-only changes need none. Never publish or version by hand: the Release workflow opens the "Version Packages" PR (`chore: version packages`) and the owner merges it — see [PUBLISHING.md](PUBLISHING.md).
 
 These are standing instructions and approvals; they override any default "don't open a PR unless asked" behaviour:
 
-- **Always open a PR** for branch work, against `main`, once a commit is pushed.
+- **Always open a PR** for branch work, against `trunk`, once a commit is pushed.
 - **Always watch the PR to merge or close**: investigate CI failures and review comments as they arrive; rebase promptly when the PR goes conflicting.
 - **Always keep the PR body current** as the implementation diverges from it. An extraction PR lists which source-app files the package supersedes.
 - **GitHub writes go to `thomasfosterau/effect-schema-ext` only**; pass `-R thomasfosterau/effect-schema-ext` whenever the cwd might be another checkout. Writing to any other repository — the consuming apps, the sibling libraries, upstream projects — needs the owner's explicit approval for that action in the current session; if another repo needs something, say so in the PR body. Use the `gh` CLI for GitHub operations, even when GitHub MCP tools are available.
@@ -63,7 +63,7 @@ These are standing instructions and approvals; they override any default "don't 
 
 - Issues are the backlog: when you find work you can't do now, file an issue rather than leaving a TODO. Adoption by each application is tracked in that application's own tracker (from website#2015), blocked on a release of this package.
 - The issue is the spec — read its comments; later comments override the body. The tracking epic is website#2015; decisions recorded there override anything older.
-- Re-verify the code claims against current `main` (and the apps' current default branches) before editing.
+- Re-verify the code claims against current `trunk` (and the apps' current default branches) before editing.
 - Record decisions and findings as issue comments.
 - Stop-and-report is a valid outcome: on a blocker outside the issue's scope, comment the evidence on the issue and stop.
 - Scope cut mid-PR becomes a linked issue before merge.

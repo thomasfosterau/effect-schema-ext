@@ -4,8 +4,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Security policy (read before reporting)
-    url: https://github.com/thomasfosterau/effect-schema-ext/blob/main/SECURITY.md
+    url: https://github.com/thomasfosterau/effect-schema-ext/blob/trunk/SECURITY.md
     about: Report vulnerabilities privately via a security advisory, not a public issue.
   - name: How this repo is built
-    url: https://github.com/thomasfosterau/effect-schema-ext/blob/main/CONTRIBUTING.md
+    url: https://github.com/thomasfosterau/effect-schema-ext/blob/trunk/CONTRIBUTING.md
     about: Branch model, pre-PR checklist, and CI expectations.
