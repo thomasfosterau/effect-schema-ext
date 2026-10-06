@@ -42,7 +42,7 @@ catalog:
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before bumping any of the three.
   "@effect/tsgo": 0.47.1
-  "@mpsuesser/oxlint-plugin-effect": ^0.5.0
+  "@mpsuesser/oxlint-plugin-effect": ^0.6.0
   "@types/node": ^26.6.4
   # Must match `vitest` below (its peer is the exact vitest version).
   "@vitest/coverage-istanbul": 5.0.1
