@@ -213,8 +213,9 @@ fi
 
 TMP_JSON="$(mktemp)"
 TMP_ERR="$(mktemp)"
+GATE_COV_LOG="" # effect-schema-ext #45: the coverage run's log, if any.
 cleanup() {
-  rm -f "$TMP_JSON" "$TMP_ERR"
+  rm -f "$TMP_JSON" "$TMP_ERR" ${GATE_COV_LOG:+"$GATE_COV_LOG"}
 }
 trap cleanup EXIT
 
@@ -238,13 +239,17 @@ export FALLOW_AUDIT_BASE="${FALLOW_AUDIT_BASE:-origin/trunk}"
 # function passed. Here the gate regenerates the map, from the directory the
 # audit runs in, when it is:
 #   - missing, empty, unreadable, or not a JSON object;
-#   - keyed by a path outside this checkout (`pwd -P`);
+#   - keyed by a path outside this checkout's packages/ (`pwd -P`). Anchored
+#     at packages/, not the checkout root: a map from a worktree nested under
+#     .claude/worktrees/ also starts with this checkout's path;
 #   - older than any input of the coverage run: packages/*/src and
 #     packages/*/tests (files and directories, so a deleted or renamed file
 #     counts), the vite configs and the lockfile. Compared by mtime: an edit,
 #     a `git checkout` or a rebase writes the working tree, and both the audit
 #     and the coverage run read the working tree, staged or not. A tool that
-#     restores an old mtime (`cp -p`, `tar -x`) can hide a change.
+#     restores an old mtime (`cp -p`, `tar -x`) can hide a change. Not
+#     watched, as they rarely change test results: tsconfig*.json,
+#     packages/*/package.json and pnpm-workspace.yaml.
 # The root `test:coverage` task is `cache: false`, so this check is its cache;
 # a fresh map costs one `find` and one `jq`. `vp` is found like fallow above
 # (PATH, then node_modules/.bin), and only where node_modules exists: the
@@ -253,7 +258,11 @@ export FALLOW_AUDIT_BASE="${FALLOW_AUDIT_BASE:-origin/trunk}"
 # stale after it, the gate blocks with exit 2 and says what to run, rather
 # than fail open: Claude Code shows a hook's stderr only on exit 2. The run's
 # output goes to a temp file and only its tail is shown on failure. Skipped
-# when no .fallowrc.json here sets `health.coverage`. This block sits after
+# when no .fallowrc.json here sets `health.coverage` (read with jq, so a move
+# to fallow.toml or a JSONC config would skip it silently and reopen #45), and
+# when this checkout's vite.config.ts defines no `test:coverage` task: the
+# paths and the task are this repo's layout, so a checkout #44 resolved to some
+# other repo keeps the generated behaviour. This block sits after
 # the fallow lookup, so a checkout with no fallow skips as generated without
 # paying for a coverage run.
 # `fallow hooks install --target agent --agent claude` overwrites this script
@@ -262,8 +271,8 @@ gate_coverage_stale() {
   # $1: the map's absolute path. Prints why it is stale; prints nothing if fresh.
   if [ ! -s "$1" ]; then
     echo "missing"
-  elif [ "$(jq -r --arg root "$GATE_COV_ROOT/" 'type == "object" and length > 0 and (keys | all(startswith($root)))' "$1" 2>/dev/null || true)" != "true" ]; then
-    echo "unreadable, empty or keyed by paths outside $GATE_COV_ROOT"
+  elif [ "$(jq -r --arg root "$GATE_COV_ROOT/packages/" 'type == "object" and length > 0 and (keys_unsorted | all(startswith($root)))' "$1" 2>/dev/null || true)" != "true" ]; then
+    echo "unreadable, empty or keyed by paths outside $GATE_COV_ROOT/packages"
   elif [ -n "$(find packages/*/src packages/*/tests packages/*/vite.config.ts vite.config.ts vite.package.ts pnpm-lock.yaml -newer "$1" -print -quit 2>/dev/null || true)" ]; then
     # An unmatched glob or a missing path is skipped (find's error is discarded).
     echo "older than the source, tests or config"
@@ -271,7 +280,7 @@ gate_coverage_stale() {
 }
 
 GATE_COV_PATH=""
-if [ -f .fallowrc.json ]; then
+if [ -f .fallowrc.json ] && grep -q '"test:coverage"' vite.config.ts 2>/dev/null; then
   GATE_COV_PATH="$(jq -r '.health.coverage // empty' .fallowrc.json 2>/dev/null || true)"
 fi
 if [ -n "$GATE_COV_PATH" ]; then
