@@ -94,11 +94,14 @@ export const packageConfig = ({ url, name, entries }: PackageConfigOptions) => {
             output: ["coverage/**"],
           },
         },
-        // Compiles AND RUNS every JSDoc `@example` (see docgen.json). Examples
-        // import the package by name exactly as a consumer would, which
-        // resolves through `exports` to `dist/` — hence the build edge.
+        // Compiles AND RUNS every JSDoc `@example`: docgen.json's
+        // `"runExamples": true` turns that on, and `--run-examples` is the
+        // backstop docgen falls back to if the key is ever dropped (the key
+        // wins when present, so an explicit `false` still turns it off).
+        // Examples import the package by name exactly as a consumer would,
+        // which resolves through `exports` to `dist/` — hence the build edge.
         docgen: {
-          command: "docgen",
+          command: "docgen --run-examples",
           dependsOn: ["build"],
           cache: {
             input: cacheInputs,
