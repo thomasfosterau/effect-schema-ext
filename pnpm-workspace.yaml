@@ -42,7 +42,10 @@ catalog:
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before bumping any of the three.
   "@effect/tsgo": 0.47.1
-  "@mpsuesser/oxlint-plugin-effect": ^0.5.0
+  # 0.6.0 depends on `effect` 4.0.0 (exact) and runs on the workspace singleton
+  # (the `effect` override below). Its `vite.config.ts` load calls Effect APIs, so
+  # an `effect` bump re-runs `vp check` against the plugin too.
+  "@mpsuesser/oxlint-plugin-effect": ^0.6.0
   "@types/node": ^26.6.4
   # Must match `vitest` below (its peer is the exact vitest version).
   "@vitest/coverage-istanbul": 5.0.1
@@ -85,19 +88,10 @@ overrides:
   # `effect` MUST be a singleton (see the header): force every resolution to
   # the catalog version so a hoisting reshuffle cannot introduce a second copy.
   effect: "catalog:"
-  # @mpsuesser/oxlint-plugin-effect@0.5.0 depends on effect 4.0.0-beta.100 and calls
-  # `Schema.isIncludes` at load, which rc.118 renamed to `isIncluding`; forced onto the
-  # singleton rc.118 it throws and `vite.config.ts` cannot load. This gives the lint
-  # plugin its own private copy. Remove once the plugin ships a release built on
-  # effect rc.118 or later (owner-approved, thomasfosterau/effect-schema-ext#11).
-  "@mpsuesser/oxlint-plugin-effect>effect": "4.0.0-beta.100"
 nodeLinker: hoisted
 allowBuilds:
   esbuild: true
   fallow: true
-  # Only reached through the lint plugin's private effect beta copy (see the override
-  # above); msgpackr falls back to pure JS without the native addon.
-  msgpackr-extract: false
 peerDependencyRules:
   allowAny:
     - vite
