@@ -10,7 +10,7 @@
  * @module tests/Ids.types
  */
 
-import { Schema } from "effect";
+import type * as Schema from "effect/Schema";
 import { Ids } from "@thomasfosterau/effect-schema-ext";
 
 type Assert<T extends true> = T;
