@@ -34,13 +34,20 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - name: Restore the Vite+ task cache
+      # Vite Task does not fingerprint the Node version, so the task cache is
+      # keyed on it: otherwise a run on a new `latest` Node (#31) would replay
+      # the previous Node's results for every task whose inputs are unchanged.
+      # Also prints the resolved version in the step list.
+      - name: Resolve the Node version
+        id: node
+        run: echo "version=$(node --version)" >> "$GITHUB_OUTPUT"
+      - name: Restore the Vite+ task cache (Node ${{ steps.node.outputs.version }})
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: node_modules/.vite/task-cache
-          key: vp-task-v1-${{ runner.os }}-${{ github.sha }}
+          key: vp-task-v1-${{ runner.os }}-node-${{ steps.node.outputs.version }}-${{ github.sha }}
           restore-keys: |
-            vp-task-v1-${{ runner.os }}-
+            vp-task-v1-${{ runner.os }}-node-${{ steps.node.outputs.version }}-
       - name: Format and lint
         run: vp check
       - name: Type gates (src, type-level tests, emitted declarations)
