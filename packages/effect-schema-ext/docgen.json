@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/@effect/docgen/schema.json",
   "exclude": ["src/index.ts"],
+  "runExamples": true,
   "parseCompilerOptions": {
     "noEmit": true,
     "module": "esnext",
