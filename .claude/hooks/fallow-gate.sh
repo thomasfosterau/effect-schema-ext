@@ -198,9 +198,9 @@ VERSION_RAW="$("${RUNNER[@]}" --version 2>/dev/null || true)"
 # appends a `verified: ...` line to `--version`, which made VERSION
 # "3.31.0<newline>verified:": the block message split over two lines, and the
 # floor check below was right only because `verified:` sorts after a version.
-# Cut by parameter expansion, not `| head -n1`, which under pipefail could
-# SIGPIPE the launcher. `fallow hooks install --target agent --agent claude`
-# overwrites this script without asking, so re-apply this after regenerating.
+# Cut by parameter expansion: no extra pipe or process.
+# `fallow hooks install --target agent --agent claude` overwrites this script
+# without asking, so re-apply this after regenerating.
 VERSION_RAW="${VERSION_RAW%%$'\n'*}"
 VERSION="${VERSION_RAW#fallow }"
 VERSION="${VERSION%% *}"
