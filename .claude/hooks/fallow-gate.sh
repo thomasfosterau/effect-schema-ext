@@ -5,8 +5,8 @@ set -euo pipefail
 # Installer version: 3.31.0
 # Local deviations, re-apply after `fallow hooks install` regenerates this
 # file: the FALLOW_AUDIT_BASE default (#21), the target checkout block plus
-# its tokenizer lines (#44), and the coverage map block (#45), each marked
-# below.
+# its tokenizer lines (#44), the coverage map block (#45), and the first-line
+# cut of `fallow --version` (#57), each marked below.
 # Requires bash and jq. On Windows run via git-bash or WSL.
 # Blocks Claude Code git commit and git push when fallow audit returns verdict fail.
 # Runtime errors fail open with a single stderr notice so skips stay visible.
@@ -193,6 +193,15 @@ else
 fi
 
 VERSION_RAW="$("${RUNNER[@]}" --version 2>/dev/null || true)"
+# Local deviation from the generated script (effect-schema-ext #57): keep only
+# the first line. The npm package's launcher (fallow/scripts/run-binary.js)
+# appends a `verified: ...` line to `--version`, which made VERSION
+# "3.31.0<newline>verified:": the block message split over two lines, and the
+# floor check below was right only because `verified:` sorts after a version.
+# Cut by parameter expansion, not `| head -n1`, which under pipefail could
+# SIGPIPE the launcher. `fallow hooks install --target agent --agent claude`
+# overwrites this script without asking, so re-apply this after regenerating.
+VERSION_RAW="${VERSION_RAW%%$'\n'*}"
 VERSION="${VERSION_RAW#fallow }"
 VERSION="${VERSION%% *}"
 
