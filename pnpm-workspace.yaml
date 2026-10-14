@@ -46,7 +46,7 @@ catalog:
   # (the `effect` override below). Its `vite.config.ts` load calls Effect APIs, so
   # an `effect` bump re-runs `vp check` against the plugin too.
   "@mpsuesser/oxlint-plugin-effect": ^0.6.0
-  "@types/node": ^26.6.4
+  "@types/node": ^26.6.5
   # Must match `vitest` below (its peer is the exact vitest version).
   "@vitest/coverage-istanbul": 5.0.1
   effect: 4.0.0
