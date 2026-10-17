@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/package",
   "name": "@thomasfosterau/effect-schema-ext",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Pure Effect Schema helpers: the update tri-state reader, Schema issue → RFC 6901 JSON Pointer walk, bounded pagination and id-list codecs, branded UUID ids and slugs, exact literal-union tuples, and AST / decode-probe introspection.",
   "keywords": [
     "effect",
