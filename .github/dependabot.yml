@@ -1,24 +1,34 @@
-# Dependabot version-update configuration (a subset of the preferenceflow
-# application's, whose catalog this workspace mirrors).
+# Dependabot version updates. The `npm` ecosystem at `/` reads the pnpm
+# workspace and its catalogs (pnpm-workspace.yaml), where every version lives.
 #
-# `groups` collect dependencies that MUST move together: the Effect 4 release
-# line is a lockstep-versioned singleton set; the vitest toolchain is pinned to
-# vite-plus's exact versions.
+# Groups collect the sets that MUST move together, so a lockstep set arrives
+# as one PR instead of several that are each red on their own. Dependabot puts
+# a dependency in the FIRST group that matches it, so the groups run specific
+# -> general, and `exclude-patterns` keeps a package out of a broader group
+# that would otherwise claim it.
 #
-# `@effect/tsgo`, `typescript` (the TS6 alias) and `@typescript/native` (TS7)
-# are one more set: `effect-tsgo patch` matches the native `tsc` and the
-# `oxlint` vite-plus pulls in by gitHead / version and hard-errors
-# (UnsupportedTargetPackageVersionError) on any pairing it has no artifact
-# for, so a Dependabot PR that moves one of them alone goes red. They move by
-# hand, together with `vite-plus`, after reading the `components` table in
-# node_modules/@effect/tsgo/dist/effect-tsgo.cjs (see pnpm-workspace.yaml).
-# Their *version* updates are ignored below while SECURITY updates stay
-# enabled: each ignore is scoped to the `version-update:semver-*` update
-# types, because a bare `dependency-name` ignore would block security updates
-# too. `@effect/tsgo` is also excluded from the `effect` group, whose
-# `@effect/*` pattern would otherwise match it.
+# - `toolchain`: vite-plus pins the `oxlint`, `oxfmt`, `oxlint-tsgolint` and
+#   `vitest` it carries; `vite` is vite-plus's aliased core package;
+#   `@vitest/coverage-istanbul` has an exact peer on `vitest`; and
+#   `effect-tsgo patch` (the `prepare` script) hard-errors
+#   (UnsupportedTargetPackageVersionError) on any `@typescript/native` /
+#   oxlint pairing its `components` table does not list, failing
+#   `pnpm install` itself. The Effect lint plugin loads inside that oxlint.
+#   A toolchain PR whose `@effect/tsgo` does not yet support the new oxlint
+#   goes red: fix it by hand on the PR (see the catalog comments in
+#   pnpm-workspace.yaml) rather than merging part of the set.
+# - `docgen`: `@effect/docgen` runs every example under `tsx`.
+# - `effect`: the Effect 4 release line is a lockstep-versioned singleton
+#   set. Only the dev pin moves: the published peer floor
+#   (`catalogs.peers.effect`, a `>=` range) is a tested claim that Dependabot
+#   has never rewritten (#60, #63), and it is never Dependabot's to move
+#   (AGENTS.md, Common pitfalls).
+# - `changesets`, `fallow`: their own sets.
+# - `minor-and-patch`: everything else's minor and patch updates in one PR;
+#   a major outside the sets above stays its own PR.
 #
-# `cooldown` mirrors pnpm-workspace.yaml's `minimumReleaseAge`.
+# `cooldown` mirrors pnpm-workspace.yaml's `minimumReleaseAge` (1440 minutes)
+# and its `@thomasfosterau/*` exemption.
 version: 2
 updates:
   - package-ecosystem: "npm"
@@ -37,74 +47,52 @@ updates:
       exclude:
         - "@thomasfosterau/*"
     groups:
+      toolchain:
+        applies-to: version-updates
+        patterns:
+          - "vite-plus"
+          - "vite"
+          - "vitest"
+          - "@vitest/*"
+          - "oxlint"
+          - "oxfmt"
+          - "oxlint-tsgolint"
+          - "@effect/tsgo"
+          - "@typescript/native"
+          - "typescript"
+          - "@typescript/typescript6"
+          - "@mpsuesser/oxlint-plugin-effect"
+        update-types: ["major", "minor", "patch"]
+      docgen:
+        applies-to: version-updates
+        patterns:
+          - "@effect/docgen"
+          - "tsx"
+        update-types: ["major", "minor", "patch"]
       effect:
+        applies-to: version-updates
         patterns:
           - "effect"
           - "@effect/*"
         exclude-patterns:
           - "@effect/tsgo"
-      vitest-toolchain:
+          - "@effect/docgen"
+        update-types: ["major", "minor", "patch"]
+      changesets:
+        applies-to: version-updates
         patterns:
-          - "vitest"
-          - "@vitest/coverage-istanbul"
-          - "vite-plus"
-    ignore:
-      # The TypeScript 6/7 pair and @effect/tsgo: version updates move by hand
-      # as a set with vite-plus (see the header); security updates stay on.
-      - dependency-name: "@effect/tsgo"
-        update-types:
-          [
-            "version-update:semver-major",
-            "version-update:semver-minor",
-            "version-update:semver-patch",
-          ]
-      - dependency-name: "typescript"
-        update-types:
-          [
-            "version-update:semver-major",
-            "version-update:semver-minor",
-            "version-update:semver-patch",
-          ]
-      - dependency-name: "@typescript/native"
-        update-types:
-          [
-            "version-update:semver-major",
-            "version-update:semver-minor",
-            "version-update:semver-patch",
-          ]
-      # `vite` is vite-plus's aliased core package and `vitest` must match
-      # vite-plus's exact pin, so the trio only ever moves together, by hand.
-      # `@vitest/coverage-istanbul` has an exact peer on `vitest`, so it rides
-      # the same set (a lone 5.0.2 bump against vite-plus's 5.0.1 broke
-      # `test:coverage`, effect-schema-ext#15).
-      - dependency-name: "vite"
-        update-types:
-          [
-            "version-update:semver-major",
-            "version-update:semver-minor",
-            "version-update:semver-patch",
-          ]
-      - dependency-name: "vitest"
-        update-types:
-          [
-            "version-update:semver-major",
-            "version-update:semver-minor",
-            "version-update:semver-patch",
-          ]
-      - dependency-name: "vite-plus"
-        update-types:
-          [
-            "version-update:semver-major",
-            "version-update:semver-minor",
-            "version-update:semver-patch",
-          ]
-      - dependency-name: "@vitest/coverage-istanbul"
-        update-types:
-          [
-            "version-update:semver-major",
-            "version-update:semver-minor",
-            "version-update:semver-patch",
-          ]
+          - "@changesets/*"
+        update-types: ["major", "minor", "patch"]
+      fallow:
+        applies-to: version-updates
+        patterns:
+          - "fallow"
+        update-types: ["major", "minor", "patch"]
+      minor-and-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types: ["minor", "patch"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -114,5 +102,10 @@ updates:
     labels:
       - "dependencies"
     commit-message:
-      prefix: "ci"
-      include: "scope"
+      prefix: "chore"
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types: ["major", "minor", "patch"]
