@@ -20,6 +20,7 @@
 
 import { describe, expect, it } from "vite-plus/test";
 import * as Exit from "effect/Exit";
+import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
 import { Bounded } from "@thomasfosterau/effect-schema-ext";
 
@@ -40,15 +41,13 @@ describe("NonNegative", () => {
 });
 
 describe("pageLimit / PageOffset", () => {
-  it("caps a limit at the caller's maxLimit", () => {
-    // preferenceflow caps its lists at 100, website and gardeneria at 1000.
-    for (const [cap, over] of [
-      [100, 101],
-      [1000, 1001],
-    ] as const) {
-      expect(accepts(Bounded.pageLimit(cap), cap)).toBe(true);
-      expect(accepts(Bounded.pageLimit(cap), over)).toBe(false);
-    }
+  // preferenceflow caps its lists at 100, website and gardeneria at 1000.
+  it.each([
+    [100, 101],
+    [1000, 1001],
+  ] as const)("caps a limit at the caller's maxLimit (%i)", (cap, over) => {
+    expect(accepts(Bounded.pageLimit(cap), cap)).toBe(true);
+    expect(accepts(Bounded.pageLimit(cap), over)).toBe(false);
   });
 
   it("rejects a zero, negative, fractional or non-finite limit", () => {
@@ -70,8 +69,8 @@ describe("pageLimit / PageOffset", () => {
 
   it("has no default page cap", () => {
     // packages/effect-schema-ext/CLAUDE.md: a page cap is a parameter, never a default.
-    expect(Object.keys(Bounded)).not.toContain("PageLimit");
-    expect(Object.keys(Bounded)).not.toContain("MAX_PAGE_LIMIT");
+    expect(Record.keys(Bounded)).not.toContain("PageLimit");
+    expect(Record.keys(Bounded)).not.toContain("MAX_PAGE_LIMIT");
   });
 });
 
@@ -142,7 +141,7 @@ describe("FlatQuery parity", () => {
     const decoded = Schema.decodeUnknownSync(Schema.Struct(Bounded.pagination({ maxLimit: 100 })))(
       {},
     );
-    expect(Object.keys(decoded)).toEqual(["offset", "limit"]);
+    expect(Record.keys(decoded)).toEqual(["offset", "limit"]);
   });
 
   it("the id-list bound is FlatQuery's DEFAULT_MAX_ID_LIST", () => {

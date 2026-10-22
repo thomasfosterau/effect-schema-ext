@@ -11,6 +11,7 @@
  */
 
 import { describe, expect, it } from "vite-plus/test";
+import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
 import { Ast } from "@thomasfosterau/effect-schema-ext";
 
@@ -28,7 +29,7 @@ const Person = Schema.Struct({
   summary: Schema.optionalKey(Schema.OptionFromNullOr(Schema.String)),
 });
 
-const byKey = Object.fromEntries(
+const byKey = Record.fromEntries(
   Ast.fieldTraits(Person.fields).map((traits) => [traits.key, traits]),
 );
 
@@ -65,7 +66,7 @@ describe("fieldTraits", () => {
 
   it("preserves declaration order", () => {
     expect(Ast.fieldTraits(Person.fields).map((traits) => traits.key)).toEqual(
-      Object.keys(Person.fields),
+      Record.keys(Person.fields),
     );
   });
 });

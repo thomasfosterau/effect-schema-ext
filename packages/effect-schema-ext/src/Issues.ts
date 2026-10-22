@@ -18,6 +18,7 @@
 import * as Array from "effect/Array";
 import * as JsonPointer from "effect/JsonPointer";
 import * as Match from "effect/Match";
+import * as Predicate from "effect/Predicate";
 import * as SchemaIssue from "effect/SchemaIssue";
 
 /** One path segment as an escaped RFC 6901 reference token (Effect's own escaping). */
@@ -97,7 +98,7 @@ interface WalkedLeaf extends Leaf {
 
 /** An `InvalidValue` that states no message of its own. */
 const isBareInvalidValue = (issue: SchemaIssue.Issue): boolean =>
-  issue._tag === "InvalidValue" && issue.annotations?.message === undefined;
+  Predicate.isTagged(issue, "InvalidValue") && issue.annotations?.message === undefined;
 
 const walkLeaves = (issue: SchemaIssue.Issue): ReadonlyArray<WalkedLeaf> => {
   const found: Array<WalkedLeaf> = [];

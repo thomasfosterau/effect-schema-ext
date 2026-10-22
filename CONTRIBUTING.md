@@ -2,6 +2,16 @@
 
 Maintained by Thomas Foster, with a workflow meant to be approachable for both humans and coding agents. Conventions are in [AGENTS.md](AGENTS.md).
 
+## Setup
+
+Node `^22.18.0 || ^24.11.0 || >=26.0.0`, pnpm 11 (the `packageManager` pin; `corepack enable` provides it) and [Vite+](https://viteplus.dev/) (`vp`).
+
+```sh
+pnpm install   # dependencies, the Vite+ git hooks, and the @effect/tsgo patch of tsc / oxlint
+vp check       # format + lint
+vp run check   # type gates
+```
+
 ## Branch model
 
 See [AGENTS.md § Branches and pull requests](AGENTS.md#branches-and-pull-requests).

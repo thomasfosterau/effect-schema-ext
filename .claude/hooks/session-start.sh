@@ -125,9 +125,11 @@ SHIM
 
 # ── 1. Repo binaries the documented workflows invoke directly ─────────────────
 # AGENTS.md's fallow gate runs `fallow audit …` before every commit; it resolves
-# only from node_modules/.bin. `vp` is included for the remote/web runner,
+# only from node_modules/.bin; `tsx` runs docgen's examples and ad-hoc
+# scripts. `vp` is included for the remote/web runner,
 # where the global launcher does not exist.
 link_tool "$PROJECT_DIR/node_modules/.bin/fallow"
+link_tool "$PROJECT_DIR/node_modules/.bin/tsx"
 write_vp_shim
 
 # ── 2. Bare `node` (gardeneria #1462) ─────────────────────────────────────────
@@ -158,12 +160,18 @@ fi
 # as breakage on `trunk`. `--frozen-lockfile` is a sub-second no-op when in sync.
 if [ -f "$PROJECT_DIR/pnpm-lock.yaml" ]; then
   log "syncing dependencies against the lockfile…"
-  (cd "$PROJECT_DIR" && vp install --frozen-lockfile >/dev/null 2>&1) \
-    || (cd "$PROJECT_DIR" && pnpm install --frozen-lockfile >/dev/null 2>&1) \
-    || (cd "$PROJECT_DIR" && corepack pnpm install --frozen-lockfile >/dev/null 2>&1) \
+  # pnpm only, at the `packageManager` pin: through corepack when it exists,
+  # else whatever pnpm is on PATH.
+  if command -v corepack >/dev/null 2>&1; then
+    PNPM=(corepack pnpm)
+  else
+    PNPM=(pnpm)
+  fi
+  (cd "$PROJECT_DIR" && "${PNPM[@]}" install --frozen-lockfile >/dev/null 2>&1) \
     || log "dependency install failed; continuing"
   # node_modules/.bin only exists after the install, so re-link what it provides.
   link_tool "$PROJECT_DIR/node_modules/.bin/fallow"
+  link_tool "$PROJECT_DIR/node_modules/.bin/tsx"
   write_vp_shim
 fi
 

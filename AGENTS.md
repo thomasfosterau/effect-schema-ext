@@ -1,11 +1,16 @@
 # AGENTS.md
 
-`CLAUDE.md` is a symlink to this file. This repository publishes `@thomasfosterau/effect-schema-ext`: pure Effect Schema helpers the website, gardeneria and preferenceflow apps duplicate, with no JSON:API or Drizzle dependency, so effect-jsonapi and effect-drizzle-ext can depend on them. The apps' copies are the behavioural spec and test corpus, not code to transplant; where they diverge, the issue names the reference copy (otherwise the newest). A `#NNN` in a ported comment is an app issue (website unless stated), not this tracker.
+`CLAUDE.md` is a symlink to this file. This repository publishes `@thomasfosterau/effect-schema-ext`: pure Effect Schema helpers the website, gardeneria and preferenceflow apps duplicate, with no JSON:API or Drizzle dependency, so effect-jsonapi and effect-drizzle-ext can depend on them. The apps' copies are the behavioural spec and test corpus, not code to transplant; where they diverge, the issue names the reference copy (otherwise the newest). A `#NNN` in a ported comment is an app issue (website unless stated), not this tracker. The default branch is `trunk`.
+
+| Path | Package | Published |
+| --- | --- | --- |
+| `packages/effect-schema-ext` | `@thomasfosterau/effect-schema-ext` | npm |
+| `tests/dist-consumer` | `@effect-schema-ext/dist-consumer` | no — type-checks a fixture against the emitted `dist/` declarations |
 
 ## Common pitfalls
 
-- **Versions live only in the `pnpm-workspace.yaml` catalog** (`catalogMode: strict` rejects anything else). After editing it, run `pnpm install` and commit `pnpm-lock.yaml` — a stale lockfile fails CI with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`. `@effect/tsgo`, `@typescript/native` and `vite-plus` move together; read their catalog comments first.
-- **The `effect` peer floor is a tested claim.** `catalogs.peers.effect` is the oldest `effect` the package has been type-checked, tested and docgen'd against (rc.118, the line the whole programme moved to in website#2015). Raising the dev pin does not raise the floor; lowering the floor, or using an API the floor lacks, means re-running the gates with the catalog pin set to the floor first.
+- **Versions live only in the `pnpm-workspace.yaml` catalog** (`catalogMode: strict` rejects anything else). After editing it, run `pnpm install` and commit `pnpm-lock.yaml` — a stale lockfile fails CI with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`. `@effect/tsgo`, `@typescript/native` and `vite-plus` move together; read their catalog comments first. Dependabot's `toolchain` group proposes them (with vitest, the oxc tools and the Effect lint plugin) as one PR; when the new oxlint outruns `@effect/tsgo`'s `components` table that PR is red until fixed by hand.
+- **The `effect` peer floor is a tested claim.** `catalogs.peers.effect` is the oldest `effect` the package has been type-checked, tested and docgen'd against (rc.118, the line the whole programme moved to in website#2015). Raising the dev pin does not raise the floor, and Dependabot's `effect` group moves only the dev pin, never `catalogs.peers`; lowering the floor, or using an API the floor lacks, means re-running the gates with the catalog pin set to the floor first.
 - **`dist/` is the product.** The package is a `vp pack` (tsdown) library with one bundle per entry point (`.` plus one subpath per module); `exports` points at `dist/`, so `tests/dist-consumer` and docgen consume it the way a consumer does. `tests/dist-consumer` type-checks a fixture against the emitted declarations with `Equals<…>` assertions — a brand that emits as `string` or a signature that emits as `any` fails there, not in an application.
 - **`"sideEffects": false` is a claim about `dist/`.** Every emitted `.js` must be pure declarations: no top-level statements with effects, no top-level `await`. That is what lets a consumer's bundler drop what it does not use.
 - **`vp run docgen` executes your examples.** `@effect/docgen` compiles every JSDoc `@example` as a program and runs it, importing the package by name through `dist/`. An example must be complete, must not use `declare const`, and must not throw. docgen does not compare output: when a change alters what an example prints, update its `// →` comments by hand.
@@ -31,7 +36,7 @@ The package's terms, invariants and import boundary are in [`packages/effect-sch
 - `vp run test:coverage` — the unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
 - `pnpm changeset` — add a changeset (see Branches and pull requests).
 
-Invoke everything through `vp` (`vp exec` instead of `npx`; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (and `pnpm install --frozen-lockfile` in CI), `pnpm changeset`, and `scripts/release.sh`'s `pnpm pack` + `npm publish` on the release path.
+Node and pnpm only: no bun, deno, npm or yarn. Invoke everything through `vp` (`vp exec <bin>` for a package binary; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (and `pnpm install --frozen-lockfile` in CI), `pnpm changeset`, and `scripts/release.sh`'s `pnpm pack` + `npm publish` on the release path.
 
 ## Verification
 
@@ -43,7 +48,7 @@ Before you report work as done, run the gates below in order and quote each comm
 4. `vp run -r test:unit`
 5. `vp run -r build`
 6. `vp run docgen`
-7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent` — without the coverage map fallow scores every function as uncovered, and any function with cyclomatic complexity ≥ 5 fails the audit on its own. Fallow's config here is `.fallowrc.json`, not the `fallow.toml` the generated block below names (#20).
+7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/trunk` — without the coverage map fallow scores every function as uncovered, and any function with cyclomatic complexity ≥ 5 fails the audit on its own. Fallow's config here is `.fallowrc.json`, not the `fallow.toml` the generated block below names (#20).
 8. A changeset for every change to the published package's behaviour.
 
 ## Branches and pull requests
@@ -70,13 +75,13 @@ These are standing instructions and approvals; they override any default "don't 
 
 ## Effect
 
-Consult effect-solutions before writing Effect code (`vp exec effect-solutions list`, then `vp exec effect-solutions show <topic>…`, e.g. `basics data-modeling error-handling testing`); never guess at an Effect pattern. If it isn't available, read `node_modules/effect/dist/*.d.ts`. The pinned version is the `effect` entry in `pnpm-workspace.yaml`'s catalog.
+Read the installed package before writing Effect code: `node_modules/effect/AGENTS.md` and `node_modules/effect/ai-docs/` (the pinned version ships both), then the declarations in `node_modules/effect/dist/*.d.ts` and the source in `node_modules/effect/src`. Never guess at an Effect API. The pinned version is the `effect` entry in `pnpm-workspace.yaml`'s catalog.
 
 This package has no error channel of its own: helpers are schemas and pure functions, and a decode failure is Effect's `SchemaError`. If one is ever needed, it is `Schema.TaggedError<Self>()(tag, fields)` (rc.118 has no `TaggedErrorClass`).
 
 ## Agent sessions
 
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `vp` and `fallow` on PATH for non-interactive shells. It hydrates no secrets; nothing here needs one, and nothing here can publish. Two more hooks run in a session: every Write/Edit/MultiEdit of a `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.css`/`.json`/`.md` file is followed by `vp fmt --write` on that file, and a Bash `git commit` / `git push` first runs `fallow audit` (`.claude/hooks/fallow-gate.sh`), which blocks on a `fail` verdict.
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `vp` (a re-exec shim to the nearest project-local vite-plus), `fallow` and `tsx` on PATH for non-interactive shells. It hydrates no secrets; nothing here needs one, and nothing here can publish. Two more hooks run in a session: every Write/Edit/MultiEdit of a `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.css`/`.json`/`.md` file is followed by `vp fmt --write` on that file, and a Bash `git commit` / `git push` first runs `fallow audit` (`.claude/hooks/fallow-gate.sh`), which blocks on a `fail` verdict; it audits against `origin/trunk` (`FALLOW_AUDIT_BASE` overrides) and regenerates a stale coverage map first.
 
 ## Documentation surfaces
 
