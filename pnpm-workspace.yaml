@@ -51,7 +51,6 @@ catalog:
   # Must match `vitest` below (its peer is the exact vitest version).
   "@vitest/coverage-istanbul": 5.0.5
   effect: 4.0.3
-  effect-solutions: ^0.5.3
   fallow: 3.34.1
   # `@effect/docgen` runs each example under tsx.
   tsx: ^4.23.13
