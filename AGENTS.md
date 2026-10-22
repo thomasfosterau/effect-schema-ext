@@ -1,6 +1,11 @@
 # AGENTS.md
 
-`CLAUDE.md` is a symlink to this file. This repository publishes `@thomasfosterau/effect-schema-ext`: pure Effect Schema helpers the website, gardeneria and preferenceflow apps duplicate, with no JSON:API or Drizzle dependency, so effect-jsonapi and effect-drizzle-ext can depend on them. The apps' copies are the behavioural spec and test corpus, not code to transplant; where they diverge, the issue names the reference copy (otherwise the newest). A `#NNN` in a ported comment is an app issue (website unless stated), not this tracker.
+`CLAUDE.md` is a symlink to this file. This repository publishes `@thomasfosterau/effect-schema-ext`: pure Effect Schema helpers the website, gardeneria and preferenceflow apps duplicate, with no JSON:API or Drizzle dependency, so effect-jsonapi and effect-drizzle-ext can depend on them. The apps' copies are the behavioural spec and test corpus, not code to transplant; where they diverge, the issue names the reference copy (otherwise the newest). A `#NNN` in a ported comment is an app issue (website unless stated), not this tracker. The default branch is `trunk`.
+
+| Path | Package | Published |
+| --- | --- | --- |
+| `packages/effect-schema-ext` | `@thomasfosterau/effect-schema-ext` | npm |
+| `tests/dist-consumer` | `@effect-schema-ext/dist-consumer` | no — type-checks a fixture against the emitted `dist/` declarations |
 
 ## Common pitfalls
 
@@ -43,7 +48,7 @@ Before you report work as done, run the gates below in order and quote each comm
 4. `vp run -r test:unit`
 5. `vp run -r build`
 6. `vp run docgen`
-7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent` — without the coverage map fallow scores every function as uncovered, and any function with cyclomatic complexity ≥ 5 fails the audit on its own. Fallow's config here is `.fallowrc.json`, not the `fallow.toml` the generated block below names (#20).
+7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/trunk` — without the coverage map fallow scores every function as uncovered, and any function with cyclomatic complexity ≥ 5 fails the audit on its own. Fallow's config here is `.fallowrc.json`, not the `fallow.toml` the generated block below names (#20).
 8. A changeset for every change to the published package's behaviour.
 
 ## Branches and pull requests
@@ -76,7 +81,7 @@ This package has no error channel of its own: helpers are schemas and pure funct
 
 ## Agent sessions
 
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `vp` and `fallow` on PATH for non-interactive shells. It hydrates no secrets; nothing here needs one, and nothing here can publish. Two more hooks run in a session: every Write/Edit/MultiEdit of a `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.css`/`.json`/`.md` file is followed by `vp fmt --write` on that file, and a Bash `git commit` / `git push` first runs `fallow audit` (`.claude/hooks/fallow-gate.sh`), which blocks on a `fail` verdict.
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `vp` (a re-exec shim to the nearest project-local vite-plus), `fallow` and `tsx` on PATH for non-interactive shells. It hydrates no secrets; nothing here needs one, and nothing here can publish. Two more hooks run in a session: every Write/Edit/MultiEdit of a `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.css`/`.json`/`.md` file is followed by `vp fmt --write` on that file, and a Bash `git commit` / `git push` first runs `fallow audit` (`.claude/hooks/fallow-gate.sh`), which blocks on a `fail` verdict; it audits against `origin/trunk` (`FALLOW_AUDIT_BASE` overrides) and regenerates a stale coverage map first.
 
 ## Documentation surfaces
 

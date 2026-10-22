@@ -125,9 +125,11 @@ SHIM
 
 # ── 1. Repo binaries the documented workflows invoke directly ─────────────────
 # AGENTS.md's fallow gate runs `fallow audit …` before every commit; it resolves
-# only from node_modules/.bin. `vp` is included for the remote/web runner,
+# only from node_modules/.bin; `tsx` runs docgen's examples and ad-hoc
+# scripts. `vp` is included for the remote/web runner,
 # where the global launcher does not exist.
 link_tool "$PROJECT_DIR/node_modules/.bin/fallow"
+link_tool "$PROJECT_DIR/node_modules/.bin/tsx"
 write_vp_shim
 
 # ── 2. Bare `node` (gardeneria #1462) ─────────────────────────────────────────
@@ -164,6 +166,7 @@ if [ -f "$PROJECT_DIR/pnpm-lock.yaml" ]; then
     || log "dependency install failed; continuing"
   # node_modules/.bin only exists after the install, so re-link what it provides.
   link_tool "$PROJECT_DIR/node_modules/.bin/fallow"
+  link_tool "$PROJECT_DIR/node_modules/.bin/tsx"
   write_vp_shim
 fi
 
