@@ -160,8 +160,10 @@ describe("toNullOrFields converts a whole Option-encoded update input", () => {
 
   it("keeps the input's own key order", () => {
     const converted = TriState.toNullOrFields(decode({ summary: null, id: "a", title: "T" }));
-    expect(Object.keys(converted)).toEqual(
-      Object.keys(decode({ summary: null, id: "a", title: "T" })),
+    // `Reflect.ownKeys`: `Record.keys` wants every key present, and these
+    // fields are optional.
+    expect(Reflect.ownKeys(converted)).toEqual(
+      Reflect.ownKeys(decode({ summary: null, id: "a", title: "T" })),
     );
   });
 });

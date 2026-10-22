@@ -62,47 +62,21 @@ export default defineConfig({
       // "effect/Option"`) this library shares with its consumers.
       "effect/prefer-namespace-imports": "off",
 
-      // ---- Effect preset: ported-code allowances ---------------------------
-      // The modules under packages/*/src are ports of behaviour the
-      // applications carry today, which predates the Effect oxlint preset. The
-      // rules below sit at `warn` so a port stays committable while each site
-      // stays reported; a new site is a defect, not headroom.
-      // Baseline: `vp check` reports 30 warnings at dfd8622; a change that
-      // raises the count adds a defect. Flip a rule to `error` and delete its
-      // line when its count reaches zero.
-      "effect/imperative-loops": "warn",
-      "effect/avoid-native-object-helpers": "warn",
-      "effect/avoid-non-null-assertion": "warn",
-      "effect/avoid-any": "warn",
-      "effect/avoid-untagged-errors": "warn",
-      "effect/avoid-direct-json": "warn",
-      "effect/prefer-arr-match": "warn",
-      "effect/no-length-comparison": "warn",
-      "effect/prefer-arr-sort": "warn",
-      "effect/avoid-try-catch": "warn",
-      "effect/yield-in-for-loop": "warn",
-      "effect/prefer-effect-is": "warn",
-      "effect/avoid-expect-in-if": "warn",
-      "effect/effect-run-in-body": "warn",
-      "effect/prefer-effect-fn": "warn",
-      "effect/avoid-direct-tag-checks": "warn",
-      "effect/avoid-option-getorthrow": "warn",
-      "effect/no-barrel-imports": "warn",
-      "effect/throw-in-effect-gen": "warn",
       // ---- Effect preset: rules this workspace's conventions cut across ----
       // `prefer-option-over-null` also fires on `?: T | undefined`, which is
       // the ONLY spelling of an optional member `exactOptionalPropertyTypes`
       // lets a caller forward an optional of its own into (AGENTS.md). A bare
       // `null` / `undefined` in a return type is still a finding to read; the
-      // options-object members are not.
+      // options-object members are not. The remaining sites are exactly those
+      // members (`SlugOptions`, `PointerOptions`, `PaginationOptions`,
+      // `IdListOptions`) and the dist-consumer assertions of the tri-state's
+      // nullable encoding, which is the published contract.
       "effect/prefer-option-over-null": "warn",
       // `unknown` is the honest type of a decode probe's input: the `Ast`
       // module asks "does this schema accept `null` / `[]` / an ISO
-      // string?", and the answer is a decode of an arbitrary value.
+      // string?", and the answer is a decode of an arbitrary value. The
+      // tests' `issueFor` / `accepts` helpers are the same probe.
       "effect/no-unknown-parameters": "warn",
-      "effect/no-unknown-returns": "warn",
-      "effect/no-unsafe-dictionary-type": "warn",
-      "effect/no-runtime-typeof": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
       "typescript/ban-ts-comment": "off",
@@ -116,11 +90,19 @@ export default defineConfig({
       // `node:*` are the only things that work there. The Effect preset's
       // service rules have no satisfiable fix in these files.
       {
-        files: ["**/vite.config.ts", "**/vitest.config.ts", "vite.package.ts"],
+        files: ["**/vite.config.ts", "**/vitest.config.ts", "vite.package.ts", "scripts/**"],
         rules: {
           "effect/avoid-node-imports": "off",
           "effect/avoid-sync-fs": "off",
           "effect/avoid-process-env": "off",
+          // Plain Node build tooling (the per-package task graph and alias
+          // builder): native `.length` checks and `Object.fromEntries` are the
+          // idiom, and importing `effect` into a config Vite loads before any
+          // workspace package is built buys nothing.
+          "effect/imperative-loops": "off",
+          "effect/no-length-comparison": "off",
+          "effect/prefer-arr-match": "off",
+          "effect/avoid-native-object-helpers": "off",
           "effect/use-console-service": "off",
           "effect/use-filesystem-service": "off",
           "effect/use-path-service": "off",

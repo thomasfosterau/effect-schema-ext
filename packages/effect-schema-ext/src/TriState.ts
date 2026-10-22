@@ -34,6 +34,7 @@
  */
 
 import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
 
@@ -252,9 +253,9 @@ export const match =
     readonly onAssign: (value: A) => B;
   }): ((state: TriState<A>) => B) =>
   (state) =>
-    state._tag === "Assign"
+    Predicate.isTagged(state, "Assign")
       ? cases.onAssign(state.value)
-      : state._tag === "Clear"
+      : Predicate.isTagged(state, "Clear")
         ? cases.onClear()
         : cases.onCarryForward();
 

@@ -11,10 +11,12 @@
  */
 
 import { describe, expect, it } from "vite-plus/test";
-import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaParser from "effect/SchemaParser";
 import { Issues } from "@thomasfosterau/effect-schema-ext";
 
 const ATTRIBUTES = ["data", "attributes"] as const;
@@ -24,7 +26,10 @@ const issueFor = <S extends Schema.Codec<unknown, unknown, never, never>>(
   schema: S,
   input: unknown,
 ): SchemaIssue.Issue =>
-  Schema.decodeUnknownEffect(schema)(input).pipe(Effect.flip, Effect.runSync).issue;
+  SchemaParser.decodeUnknownResult(schema)(input).pipe(
+    Result.getFailure,
+    Option.getOrElse(() => expect.unreachable("the decode was expected to fail")),
+  );
 
 const unionAst: SchemaAST.Union = Schema.Union([Schema.String, Schema.Finite]).ast;
 
