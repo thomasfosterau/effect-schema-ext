@@ -9,8 +9,8 @@
 
 ## Common pitfalls
 
-- **Versions live only in the `pnpm-workspace.yaml` catalog** (`catalogMode: strict` rejects anything else). After editing it, run `pnpm install` and commit `pnpm-lock.yaml` — a stale lockfile fails CI with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`. `@effect/tsgo`, `@typescript/native` and `vite-plus` move together; read their catalog comments first.
-- **The `effect` peer floor is a tested claim.** `catalogs.peers.effect` is the oldest `effect` the package has been type-checked, tested and docgen'd against (rc.118, the line the whole programme moved to in website#2015). Raising the dev pin does not raise the floor; lowering the floor, or using an API the floor lacks, means re-running the gates with the catalog pin set to the floor first.
+- **Versions live only in the `pnpm-workspace.yaml` catalog** (`catalogMode: strict` rejects anything else). After editing it, run `pnpm install` and commit `pnpm-lock.yaml` — a stale lockfile fails CI with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`. `@effect/tsgo`, `@typescript/native` and `vite-plus` move together; read their catalog comments first. Dependabot's `toolchain` group proposes them (with vitest, the oxc tools and the Effect lint plugin) as one PR; when the new oxlint outruns `@effect/tsgo`'s `components` table that PR is red until fixed by hand.
+- **The `effect` peer floor is a tested claim.** `catalogs.peers.effect` is the oldest `effect` the package has been type-checked, tested and docgen'd against (rc.118, the line the whole programme moved to in website#2015). Raising the dev pin does not raise the floor, and Dependabot's `effect` group moves only the dev pin, never `catalogs.peers`; lowering the floor, or using an API the floor lacks, means re-running the gates with the catalog pin set to the floor first.
 - **`dist/` is the product.** The package is a `vp pack` (tsdown) library with one bundle per entry point (`.` plus one subpath per module); `exports` points at `dist/`, so `tests/dist-consumer` and docgen consume it the way a consumer does. `tests/dist-consumer` type-checks a fixture against the emitted declarations with `Equals<…>` assertions — a brand that emits as `string` or a signature that emits as `any` fails there, not in an application.
 - **`"sideEffects": false` is a claim about `dist/`.** Every emitted `.js` must be pure declarations: no top-level statements with effects, no top-level `await`. That is what lets a consumer's bundler drop what it does not use.
 - **`vp run docgen` executes your examples.** `@effect/docgen` compiles every JSDoc `@example` as a program and runs it, importing the package by name through `dist/`. An example must be complete, must not use `declare const`, and must not throw. docgen does not compare output: when a change alters what an example prints, update its `// →` comments by hand.
@@ -36,7 +36,7 @@ The package's terms, invariants and import boundary are in [`packages/effect-sch
 - `vp run test:coverage` — the unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
 - `pnpm changeset` — add a changeset (see Branches and pull requests).
 
-Invoke everything through `vp` (`vp exec` instead of `npx`; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (and `pnpm install --frozen-lockfile` in CI), `pnpm changeset`, and `scripts/release.sh`'s `pnpm pack` + `npm publish` on the release path.
+Node and pnpm only: no bun, deno, npm or yarn. Invoke everything through `vp` (`vp exec <bin>` for a package binary; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (and `pnpm install --frozen-lockfile` in CI), `pnpm changeset`, and `scripts/release.sh`'s `pnpm pack` + `npm publish` on the release path.
 
 ## Verification
 
@@ -75,7 +75,7 @@ These are standing instructions and approvals; they override any default "don't 
 
 ## Effect
 
-Consult effect-solutions before writing Effect code (`vp exec effect-solutions list`, then `vp exec effect-solutions show <topic>…`, e.g. `basics data-modeling error-handling testing`); never guess at an Effect pattern. If it isn't available, read `node_modules/effect/dist/*.d.ts`. The pinned version is the `effect` entry in `pnpm-workspace.yaml`'s catalog.
+Read the installed package before writing Effect code: `node_modules/effect/AGENTS.md` and `node_modules/effect/ai-docs/` (the pinned version ships both), then the declarations in `node_modules/effect/dist/*.d.ts` and the source in `node_modules/effect/src`. Never guess at an Effect API. The pinned version is the `effect` entry in `pnpm-workspace.yaml`'s catalog.
 
 This package has no error channel of its own: helpers are schemas and pure functions, and a decode failure is Effect's `SchemaError`. If one is ever needed, it is `Schema.TaggedError<Self>()(tag, fields)` (rc.118 has no `TaggedErrorClass`).
 
