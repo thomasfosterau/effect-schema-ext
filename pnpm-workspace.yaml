@@ -42,7 +42,7 @@ catalog:
   # `pnpm install` itself in the `prepare` script. Read the `components`
   # table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs before bumping
   # any of the three.
-  "@effect/tsgo": 0.55.0
+  "@effect/tsgo": 0.57.0
   # 0.6.0 depends on `effect` 4.0.0 (exact) and runs on the workspace singleton
   # (the `effect` override below). Its `vite.config.ts` load calls Effect APIs, so
   # an `effect` bump re-runs `vp check` against the plugin too.
@@ -69,7 +69,7 @@ catalog:
   # core package, and `vitest` must match vite-plus's exact pin
   # (1.3.0 -> 5.0.5) because the `vitest: "catalog:"` override forces every
   # resolution to the catalog singleton.
-  vite-plus: 1.3.0
+  vite-plus: 1.4.0
   vite: npm:@voidzero-dev/vite-plus-core@1.3.0
   vitest: 5.0.5
 
