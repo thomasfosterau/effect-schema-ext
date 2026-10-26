@@ -51,7 +51,7 @@ catalog:
   # Must match `vitest` below (its peer is the exact vitest version).
   "@vitest/coverage-istanbul": 5.0.5
   effect: 4.0.5
-  fallow: 3.34.1
+  fallow: 3.36.0
   # `@effect/docgen` runs each example under tsx.
   tsx: ^4.23.13
   # TypeScript 6/7 side-by-side: TS7 (the native Go compiler) ships no JS API
