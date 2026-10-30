@@ -249,12 +249,7 @@ export interface IdListOptions {
  * @since 0.1.0
  * @category models
  */
-export type IdListCodec = Schema.Codec<
-  ReadonlyArray<string>,
-  string | ReadonlyArray<string>,
-  never,
-  never
->;
+export type IdListCodec = Schema.Codec<ReadonlyArray<string>, string | ReadonlyArray<string>>;
 
 const joinRepeated = SchemaTransformation.transform<string, string | ReadonlyArray<string>>({
   decode: (value) => (Predicate.isString(value) ? value : value.join(",")),

@@ -13,7 +13,8 @@
 #   `effect-tsgo patch` (the `prepare` script) hard-errors
 #   (UnsupportedTargetPackageVersionError) on any `@typescript/native` /
 #   oxlint pairing its `components` table does not list, failing
-#   `pnpm install` itself. The Effect lint plugin loads inside that oxlint.
+#   `pnpm install` itself. The Effect lint plugin (`@enfect/oxlint`) loads
+#   inside that oxlint.
 #   A toolchain PR whose `@effect/tsgo` does not yet support the new oxlint
 #   goes red: fix it by hand on the PR (see the catalog comments in
 #   pnpm-workspace.yaml) rather than merging part of the set.
@@ -27,8 +28,21 @@
 # - `minor-and-patch`: everything else's minor and patch updates in one PR;
 #   a major outside the sets above stays its own PR.
 #
-# `cooldown` mirrors pnpm-workspace.yaml's `minimumReleaseAge` (1440 minutes)
-# and its `@thomasfosterau/*` exemption.
+# By hand, never by Dependabot (it cannot rewrite them):
+# - the npm-alias catalog entries: `vite`
+#   (`npm:@voidzero-dev/vite-plus-core@<v>`, must equal `vite-plus`),
+#   `typescript` (`npm:@typescript/typescript6@<v>`) and `@typescript/native`
+#   (`npm:typescript@<v>`, must match `@effect/tsgo`'s components table).
+#   Set them on the `toolchain` PR that moves their partner.
+# - the `overrides` literals in pnpm-workspace.yaml (`undici`, a security
+#   floor; drop it once nothing resolves below the fix) and the catalog's
+#   `catalogs.peers` floor.
+# - the npm version the Release workflow installs (`npm install -g npm@…`).
+#
+# `cooldown` waits 1 day, Dependabot's smallest unit (whole days only). That
+# is longer than pnpm-workspace.yaml's `minimumReleaseAge` (480 minutes, 8
+# hours), so a Dependabot PR never proposes a version pnpm would still refuse.
+# It keeps the `@thomasfosterau/*` exemption pnpm has.
 version: 2
 updates:
   - package-ecosystem: "npm"
@@ -61,7 +75,9 @@ updates:
           - "@typescript/native"
           - "typescript"
           - "@typescript/typescript6"
-          - "@mpsuesser/oxlint-plugin-effect"
+          - "@enfect/oxlint"
+          - "@oxlint/*"
+          - "@voidzero-dev/*"
         update-types: ["major", "minor", "patch"]
       docgen:
         applies-to: version-updates
@@ -103,6 +119,8 @@ updates:
       - "dependencies"
     commit-message:
       prefix: "chore"
+    cooldown:
+      default-days: 1
     groups:
       actions:
         applies-to: version-updates

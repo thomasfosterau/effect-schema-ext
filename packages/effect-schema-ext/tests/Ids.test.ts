@@ -17,7 +17,7 @@ const UUID = "5f0c3f9a-8a18-4f6e-9b2e-7a8a1b2c3d4e";
 
 describe("Uuid", () => {
   it("accepts a UUID and rejects anything else", () => {
-    expect(Schema.decodeUnknownSync(Ids.Uuid)(UUID)).toBe(UUID);
+    expect(Schema.decodeSync(Ids.Uuid)(UUID)).toBe(UUID);
     expect(Schema.is(Ids.Uuid)("not-a-uuid")).toBe(false);
     expect(Schema.is(Ids.Uuid)("")).toBe(false);
     expect(Schema.is(Ids.Uuid)(42)).toBe(false);
@@ -29,7 +29,7 @@ describe("make / refine — branded UUID ids", () => {
   const PersonId = Ids.refine(EntityId, "PersonId");
 
   it("decodes a UUID and keeps the plain string on the wire", () => {
-    const decoded = Schema.decodeUnknownSync(PersonId)(UUID);
+    const decoded = Schema.decodeSync(PersonId)(UUID);
     expect(decoded).toBe(UUID);
     expect(Schema.encodeSync(PersonId)(decoded)).toBe(UUID);
   });
@@ -79,31 +79,31 @@ describe("slug({ reserved }) — the node slug", () => {
   });
 
   it("rejects uppercase characters", () => {
-    expect(() => decode("My-Post")).toThrow();
+    expect(() => decode("My-Post")).toThrow(Schema.SchemaError);
   });
 
   it("rejects spaces", () => {
-    expect(() => decode("my post")).toThrow();
+    expect(() => decode("my post")).toThrow(Schema.SchemaError);
   });
 
   it("rejects a leading hyphen", () => {
-    expect(() => decode("-my-post")).toThrow();
+    expect(() => decode("-my-post")).toThrow(Schema.SchemaError);
   });
 
   it("rejects a trailing hyphen", () => {
-    expect(() => decode("my-post-")).toThrow();
+    expect(() => decode("my-post-")).toThrow(Schema.SchemaError);
   });
 
   it("rejects consecutive hyphens", () => {
-    expect(() => decode("my--post")).toThrow();
+    expect(() => decode("my--post")).toThrow(Schema.SchemaError);
   });
 
   it("rejects an empty string", () => {
-    expect(() => decode("")).toThrow();
+    expect(() => decode("")).toThrow(Schema.SchemaError);
   });
 
   it("rejects a slug over 200 characters", () => {
-    expect(() => decode("a".repeat(201))).toThrow();
+    expect(() => decode("a".repeat(201))).toThrow(Schema.SchemaError);
   });
 
   it("accepts a slug at the 200-character bound", () => {
@@ -143,16 +143,16 @@ describe("FlatQuery parity", () => {
     // FlatQuery.slug checks `Schema.isBetweenLength(1, maxLength)`; the message
     // a client sees for an over-long or empty slug must be the same.
     const expected = /Expected a value with a length between 1 and 200/;
-    expect(() => Schema.decodeUnknownSync(Ids.Slug)("a".repeat(201))).toThrow(expected);
-    expect(() => Schema.decodeUnknownSync(Ids.Slug)("")).toThrow(expected);
+    expect(() => Schema.decodeSync(Ids.Slug)("a".repeat(201))).toThrow(expected);
+    expect(() => Schema.decodeSync(Ids.Slug)("")).toThrow(expected);
   });
 
   it("uses FlatQuery's pattern and messages", () => {
     expect(Ids.SLUG_PATTERN.source).toBe("^[a-z0-9]+(?:-[a-z0-9]+)*$");
-    expect(() => Schema.decodeUnknownSync(Ids.Slug)("Not A Slug")).toThrow(
+    expect(() => Schema.decodeSync(Ids.Slug)("Not A Slug")).toThrow(
       'must be lowercase letters, numbers, and hyphens (e.g. "my-post-title")',
     );
-    expect(() => Schema.decodeUnknownSync(Ids.slug({ reserved: ["edit"] }))("edit")).toThrow(
+    expect(() => Schema.decodeSync(Ids.slug({ reserved: ["edit"] }))("edit")).toThrow(
       '"edit" is a reserved path segment and cannot be used as a slug',
     );
   });

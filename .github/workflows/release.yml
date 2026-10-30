@@ -23,7 +23,9 @@ jobs:
     name: Version or publish
     # Never run on forks (they have neither the environment nor the trusted
     # publisher binding, so a fork cannot publish on your behalf).
-    if: github.repository == 'thomasfosterau/effect-schema-ext'
+    # Never for Dependabot either: this job holds `id-token: write` and a
+    # write-scoped token, which a `dependabot[bot]` run must never reach.
+    if: github.repository == 'thomasfosterau/effect-schema-ext' && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Requires manual approval via a protected GitHub Environment named

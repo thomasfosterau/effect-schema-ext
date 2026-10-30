@@ -22,10 +22,7 @@ import { Issues } from "@thomasfosterau/effect-schema-ext";
 const ATTRIBUTES = ["data", "attributes"] as const;
 
 /** The issue tree a failed decode raises. */
-const issueFor = <S extends Schema.Codec<unknown, unknown, never, never>>(
-  schema: S,
-  input: unknown,
-): SchemaIssue.Issue =>
+const issueFor = (schema: Schema.Codec<unknown, unknown>, input: unknown): SchemaIssue.Issue =>
   SchemaParser.decodeUnknownResult(schema)(input).pipe(
     Result.getFailure,
     Option.getOrElse(() => expect.unreachable("the decode was expected to fail")),

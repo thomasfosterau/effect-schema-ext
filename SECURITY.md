@@ -16,7 +16,7 @@ This package is published with a hardened, automated pipeline designed to resist
 - **Pinned actions.** All GitHub Actions are pinned to full commit SHAs, so a hijacked tag cannot inject malicious workflow code.
 - **Least privilege.** Workflows default to `permissions: {}`; each job opts into only the scopes it needs. CI checks out with `persist-credentials: false`.
 - **Manual approval gate.** Publishing runs in a protected `release` environment that requires manual approval.
-- **Locked dependencies.** Installs use `pnpm install --frozen-lockfile` against the committed `pnpm-lock.yaml`; Dependabot proposes updates for review.
+- **Locked dependencies.** Installs use `pnpm install --frozen-lockfile` against the committed `pnpm-lock.yaml`; Dependabot proposes updates for review. pnpm's `minimumReleaseAge` holds a newly published version for 8 hours before it installs, and Dependabot's `cooldown` waits a day.
 
 ## Release pipeline
 

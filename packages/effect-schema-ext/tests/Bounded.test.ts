@@ -27,7 +27,7 @@ import { Bounded } from "@thomasfosterau/effect-schema-ext";
 const A = "00000000-0000-4000-8000-000000000000";
 const B = "00000000-0000-4000-8000-000000000001";
 
-const accepts = (schema: Schema.Codec<unknown, unknown, never, never>, value: unknown): boolean =>
+const accepts = (schema: Schema.Codec<unknown, unknown>, value: unknown): boolean =>
   Exit.isSuccess(Schema.decodeUnknownExit(schema)(value));
 
 describe("NonNegative", () => {
@@ -88,16 +88,16 @@ describe("pagination — defaulted window", () => {
   });
 
   it("rejects an unbounded, zero, negative or fractional window", () => {
-    expect(() => decode({ limit: 101 })).toThrow();
-    expect(() => decode({ limit: 0 })).toThrow();
-    expect(() => decode({ limit: 2.5 })).toThrow();
-    expect(() => decode({ offset: -1 })).toThrow();
-    expect(() => decode({ offset: 0.5 })).toThrow();
+    expect(() => decode({ limit: 101 })).toThrow(Schema.SchemaError);
+    expect(() => decode({ limit: 0 })).toThrow(Schema.SchemaError);
+    expect(() => decode({ limit: 2.5 })).toThrow(Schema.SchemaError);
+    expect(() => decode({ offset: -1 })).toThrow(Schema.SchemaError);
+    expect(() => decode({ offset: 0.5 })).toThrow(Schema.SchemaError);
   });
 
   it("honours a caller-chosen default", () => {
     const Twenty = Schema.Struct(Bounded.pagination({ maxLimit: 1000, defaultLimit: 20 }));
-    expect(Schema.decodeUnknownSync(Twenty)({})).toEqual({ offset: 0, limit: 20 });
+    expect(Schema.decodeSync(Twenty)({})).toEqual({ offset: 0, limit: 20 });
     expect(accepts(Twenty, { limit: 1000 })).toBe(true);
     expect(accepts(Twenty, { limit: 1001 })).toBe(false);
   });
@@ -107,7 +107,7 @@ describe("pagination — defaulted window", () => {
       ...Bounded.pagination({ maxLimit: 100 }),
       slug: Schema.optional(Schema.String),
     });
-    expect(Schema.decodeUnknownSync(List)({ limit: 10, slug: "a-slug" })).toEqual({
+    expect(Schema.decodeSync(List)({ limit: 10, slug: "a-slug" })).toEqual({
       offset: 0,
       limit: 10,
       slug: "a-slug",
@@ -124,7 +124,7 @@ describe("pagination — required window (defaultLimit: false)", () => {
     expect(accepts(List, {})).toBe(false);
     expect(accepts(List, { limit: 10 })).toBe(false);
     expect(accepts(List, { offset: 0 })).toBe(false);
-    expect(Schema.decodeUnknownSync(List)({ offset: 0, limit: 10 })).toEqual({
+    expect(Schema.decodeSync(List)({ offset: 0, limit: 10 })).toEqual({
       offset: 0,
       limit: 10,
     });
@@ -138,9 +138,7 @@ describe("pagination — required window (defaultLimit: false)", () => {
 
 describe("FlatQuery parity", () => {
   it("pagination decodes offset before limit, as FlatQuery does", () => {
-    const decoded = Schema.decodeUnknownSync(Schema.Struct(Bounded.pagination({ maxLimit: 100 })))(
-      {},
-    );
+    const decoded = Schema.decodeSync(Schema.Struct(Bounded.pagination({ maxLimit: 100 })))({});
     expect(Record.keys(decoded)).toEqual(["offset", "limit"]);
   });
 
@@ -149,11 +147,11 @@ describe("FlatQuery parity", () => {
   });
 
   it("IdList keeps repeats by default, as FlatQuery's does", () => {
-    expect(Schema.decodeUnknownSync(Bounded.IdList)(`${A},${A}`)).toEqual([A, A]);
+    expect(Schema.decodeSync(Bounded.IdList)(`${A},${A}`)).toEqual([A, A]);
   });
 
   it("IdList re-encodes to exactly the wire value it decoded", () => {
-    const decoded = Schema.decodeUnknownSync(Bounded.IdList)(`${B},${A},${B}`);
+    const decoded = Schema.decodeSync(Bounded.IdList)(`${B},${A},${B}`);
     expect(Schema.encodeSync(Bounded.IdList)(decoded)).toBe(`${B},${A},${B}`);
   });
 });
@@ -189,7 +187,7 @@ describe("IdList — the filter[ids] codec", () => {
   it("keeps the bound on the decoded side too, so encoding an empty list fails", () => {
     expect(Schema.is(Schema.toType(Bounded.IdList))([])).toBe(false);
     expect(Schema.is(Schema.toType(Bounded.IdList))([A])).toBe(true);
-    expect(() => Schema.encodeUnknownSync(Bounded.IdList)([])).toThrow();
+    expect(() => Schema.encodeUnknownSync(Bounded.IdList)([])).toThrow(Schema.SchemaError);
   });
 
   it("encodes back to the comma-separated wire string", () => {
@@ -207,7 +205,7 @@ describe("idList({ dedupe: true })", () => {
   const Deduped = Bounded.idList({ dedupe: true });
 
   it("drops repeated ids, keeping first-occurrence order", () => {
-    expect(Schema.decodeUnknownSync(Deduped)(`${B},${A},${B}`)).toEqual([B, A]);
+    expect(Schema.decodeSync(Deduped)(`${B},${A},${B}`)).toEqual([B, A]);
   });
 
   it("encodes the de-duplicated list back to the wire string", () => {
@@ -217,6 +215,6 @@ describe("idList({ dedupe: true })", () => {
   it("checks the bound on the list as sent, before dropping repeats", () => {
     const Two = Bounded.idList({ maxLength: 2, dedupe: true });
     expect(accepts(Two, `${A},${A},${A}`)).toBe(false);
-    expect(Schema.decodeUnknownSync(Two)(`${A},${A}`)).toEqual([A]);
+    expect(Schema.decodeSync(Two)(`${A},${A}`)).toEqual([A]);
   });
 });

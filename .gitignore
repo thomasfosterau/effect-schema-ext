@@ -34,3 +34,4 @@ packages/*/docs/
 # `pnpm pack` output staged by scripts/release.sh.
 .release/
 *.tgz
+.vitest/
