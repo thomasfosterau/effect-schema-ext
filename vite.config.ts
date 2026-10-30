@@ -98,7 +98,7 @@ export default defineConfig({
       // Type-aware since vite-plus 1.4: six sites in `Bounded.ts` build the
       // page window on `Schema.Number` + `isInt()`, which already rejects
       // NaN / ±Infinity. Moving them to `Schema.Finite` changes the public
-      // types, so it is its own change; stays visible as a warning until then.
+      // types, so it is its own change (#75); stays visible as a warning until then.
       "effecttsgo/schema-number": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
