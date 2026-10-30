@@ -177,9 +177,15 @@ export default defineConfig({
         },
       },
     ],
-    // Type-aware rules on (oxlint-tsgolint, Effect-patched by `prepare`);
-    // `typeCheck` stays off: type checking is the `check` tasks' job (native
-    // tsc, Effect-patched, with the tests' own tsconfig).
+    // Type-aware rules on (oxlint-tsgolint, Effect-patched by `prepare`).
+    // tsgolint reads each file's nearest tsconfig.json, so the package's
+    // tests have `tests/tsconfig.json` (extending tsconfig.test.json).
+    // `typeCheck` stays off, measured 2026-10-30: on a clean tree (CI runs
+    // `vp check` before the build) it reports 10 false TS errors in
+    // `tests/dist-consumer`, whose fixture resolves the package to its
+    // not-yet-built `dist/` declarations (0 errors once `dist/` exists), and
+    // `src` + tests already pass the Effect-patched `tsc` in `vp run check`,
+    // which also builds and checks that fixture.
     options: {
       typeAware: true,
       typeCheck: false,
