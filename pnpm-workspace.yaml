@@ -50,7 +50,7 @@ catalog:
   # loads inside vite-plus's oxlint, so it moves in the `toolchain` group and
   # an `effect` bump re-runs `vp check` against it too.
   "@enfect/oxlint": 0.9.0
-  "@types/node": ^26.6.5
+  "@types/node": ^26.6.6
   # Must match `vitest` below (its peer is the exact vitest version).
   "@vitest/coverage-istanbul": 5.0.5
   effect: 4.0.5
