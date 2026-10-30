@@ -15,7 +15,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/trunk' }}
 
-# No permissions by default; the single job grants only read access.
+# No permissions by default; the single job grants only read access. The job
+# needs no secrets and no OIDC token, so a Dependabot PR runs it with nothing
+# to leak. Every action is pinned to a full commit SHA (Dependabot's
+# `github-actions` updates keep the pins current).
 permissions: {}
 
 jobs:
@@ -49,15 +52,15 @@ jobs:
           restore-keys: |
             vp-task-v1-${{ runner.os }}-node-${{ steps.node.outputs.version }}-
       - name: Format and lint
-        run: vp check
+        run: pnpm exec vp check
       - name: Type gates (src, type-level tests, emitted declarations)
-        run: vp run --concurrency-limit 2 check
+        run: pnpm exec vp run --concurrency-limit 2 check
       - name: Unit tests
-        run: vp run -r test:unit
+        run: pnpm exec vp run -r test:unit
       - name: Build
-        run: vp run -r build
+        run: pnpm exec vp run -r build
       # Type-checks AND runs every JSDoc @example against the built dist/.
       - name: Verify documentation examples (docgen)
-        run: vp run docgen
+        run: pnpm exec vp run docgen
       - name: Audit
         run: pnpm audit --audit-level high

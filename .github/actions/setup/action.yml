@@ -2,8 +2,10 @@
 # Sets up Node.js + pnpm, restores the pnpm store cache (keyed on
 # pnpm-lock.yaml by setup-node), and installs dependencies with a frozen
 # lockfile (retried — see the Install step's own comment for why).
-# `vp` and the dev bins (tsc, docgen, tsx, fallow) land in node_modules/.bin,
-# which this adds to PATH so later steps invoke `vp …` directly. Copied from
+# `vp` and the dev bins (tsc, docgen, tsx, fallow) land in node_modules/.bin;
+# later steps call them as `pnpm exec vp …`. This action does not write
+# `GITHUB_PATH`: a step that edits the PATH of every later step is a
+# zizmor `github-env` finding. Copied from
 # the effect-web / effect-email libraries (whose action copies
 # effect-drizzle-ext's, itself the gardeneria application's).
 #
@@ -57,4 +59,3 @@ runs:
           echo "::warning::pnpm install failed (attempt ${attempt}/3); retrying in ${delay}s"
           sleep "$delay"
         done
-        echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"

@@ -208,7 +208,7 @@ describe("clearable — the Option encoding on the wire", () => {
   });
 
   it("rejects a value of the wrong type", () => {
-    expect(() => decode({ id: "a", summary: 1 })).toThrow();
+    expect(() => decode({ id: "a", summary: 1 })).toThrow(Schema.SchemaError);
   });
 });
 
@@ -236,6 +236,6 @@ describe("clearableNullOr — the nullable encoding on the wire", () => {
   });
 
   it("rejects null on a non-clearable field", () => {
-    expect(() => decode({ id: "a", name: null })).toThrow();
+    expect(() => decode({ id: "a", name: null })).toThrow(Schema.SchemaError);
   });
 });

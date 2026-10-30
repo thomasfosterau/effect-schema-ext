@@ -8,7 +8,7 @@
 
 import { defineConfig } from "vite-plus";
 import { recommended } from "@effect/tsgo/oxlint-presets";
-import effect from "@mpsuesser/oxlint-plugin-effect";
+import effect from "@enfect/oxlint";
 
 export default defineConfig({
   // Staged-file checks run by `vp staged` (pre-commit).
@@ -29,8 +29,11 @@ export default defineConfig({
   lint: {
     ignorePatterns: ["**/dist/**", "**/docs/**", "**/coverage/**", "**/node_modules/**"],
     extends: [recommended, effect.configs.recommended],
+    plugins: ["eslint", "typescript", "unicorn", "oxc", "import", "promise", "vitest", "jsdoc"],
     categories: {
       correctness: "error",
+      suspicious: "error",
+      perf: "error",
     },
     rules: {
       "eslint/no-unused-vars": [
@@ -77,6 +80,26 @@ export default defineConfig({
       // string?", and the answer is a decode of an arbitrary value. The
       // tests' `issueFor` / `accepts` helpers are the same probe.
       "effect/no-unknown-parameters": "warn",
+      // docgen's own tags: every export carries `@since` and `@category`
+      // (AGENTS.md), and module headers `@module` / `@copyright`.
+      "jsdoc/check-tag-names": [
+        "error",
+        { definedTags: ["since", "category", "module", "copyright"] },
+      ],
+      // `_tag` is Effect's discriminant, read on every tagged value.
+      "eslint/no-underscore-dangle": ["error", { allow: ["_tag"] }],
+      // Every remaining assertion is already gated twice, by
+      // `effect/casting-awareness` (a warning on each `as`) and by
+      // `effect/require-safety-comment-for-type-assertion` (a `SAFETY:`
+      // invariant above it). The three left in `src/` re-type an overloaded
+      // implementation or a mapped record no generic can prove, which a type
+      // guard cannot narrow either.
+      "typescript/no-unsafe-type-assertion": "off",
+      // Type-aware since vite-plus 1.4: six sites in `Bounded.ts` build the
+      // page window on `Schema.Number` + `isInt()`, which already rejects
+      // NaN / ±Infinity. Moving them to `Schema.Finite` changes the public
+      // types, so it is its own change (#75); stays visible as a warning until then.
+      "effecttsgo/schema-number": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
       "typescript/ban-ts-comment": "off",
@@ -121,6 +144,24 @@ export default defineConfig({
         rules: {
           "eslint/no-unused-vars": "off",
           "effect/avoid-ts-ignore": "off",
+          // `Equals<A, B>` compares `<X>() => X extends A ? 1 : 2` with its
+          // twin: each `X` is used once by design, it is the standard exact
+          // type-equality idiom.
+          "typescript/no-unnecessary-type-parameters": "off",
+          // `typeof X.Type` is the subject under test here: the assertion is
+          // that the schema's decoded type survives (declaration emit), so
+          // swapping in the exported alias would test the alias instead.
+          "effecttsgo/unnecessary-typeof-type": "off",
+        },
+      },
+      // The dist-consumer fixture resolves the package to its EMITTED
+      // `dist/` declarations, which `vp check` does not build first: before a
+      // build every imported type is `any`, so this union rule misreads the
+      // assertions. `vp run check` (which builds) is that fixture's gate.
+      {
+        files: ["tests/dist-consumer/**"],
+        rules: {
+          "typescript/no-redundant-type-constituents": "off",
         },
       },
       // Test fixtures are the seams under test, not domain code. Each rule
@@ -136,10 +177,11 @@ export default defineConfig({
         },
       },
     ],
-    // Type-aware linting is intentionally disabled: type checking stays the
-    // `check` tasks' job (native tsc, Effect-patched).
+    // Type-aware rules on (oxlint-tsgolint, Effect-patched by `prepare`);
+    // `typeCheck` stays off: type checking is the `check` tasks' job (native
+    // tsc, Effect-patched, with the tests' own tsconfig).
     options: {
-      typeAware: false,
+      typeAware: true,
       typeCheck: false,
     },
     jsPlugins: [
