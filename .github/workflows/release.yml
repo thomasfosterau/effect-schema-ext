@@ -66,18 +66,21 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      # The same `latest` alias as CI (#31): the newest Node release on the day
-      # this runs, which can be newer than the one the CI run for this commit used.
+      # The same Node as CI (#31): the newest STABLE release on the day this
+      # runs, which can be newer than the one the CI run for this commit used.
+      # Never `node-version: latest`, which also matches pre-releases (v27
+      # alpha since 2026-10-29) and would publish from an alpha Node.
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: latest
+          node-version: "*"
+          check-latest: true
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
       # scripts/release.sh publishes each `pnpm pack` tarball with the npm CLI
       # (`npm publish`), and npm's own OIDC trusted publishing needs
-      # npm >= 11.5.1. Node `latest` moves with every release, and so does the
+      # npm >= 11.5.1. Node `*` moves with every release, and so does the
       # npm it bundles, so the npm in this id-token job is pinned here rather
       # than inherited from whichever Node the run resolves. Pinned to an
       # exact version rather than `@latest`, so what runs is a version that

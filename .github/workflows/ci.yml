@@ -38,7 +38,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       # Vite Task does not fingerprint the Node version, so the task cache is
-      # keyed on it: otherwise a run on a new `latest` Node (#31) would replay
+      # keyed on it: otherwise a run on a newly released Node (#31) would replay
       # the previous Node's results for every task whose inputs are unchanged.
       # Also prints the resolved version in the step list.
       - name: Resolve the Node version
